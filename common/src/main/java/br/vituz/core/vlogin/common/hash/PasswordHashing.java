@@ -27,6 +27,15 @@ public final class PasswordHashing {
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final int SALT_LENGTH = 16;
 
+    // Tetos de custo lidos de dentro do hash. Um hash trazido de outro banco, ou
+    // gravado por quem alcançou o banco, pode pedir memória e iterações absurdas e
+    // travar a thread que conferir a senha. Os limites ficam bem acima de qualquer
+    // configuração real; acima deles o hash é recusado em vez de calculado.
+    private static final int MAX_ARGON2_MEMORY_KB = 262_144;
+    private static final int MAX_ARGON2_ITERATIONS = 64;
+    private static final int MAX_ARGON2_PARALLELISM = 16;
+    private static final int MAX_PBKDF2_ITERATIONS = 5_000_000;
+
     private final Settings settings;
 
     public PasswordHashing(Settings settings) {
@@ -169,6 +178,11 @@ public final class PasswordHashing {
                 parallelism = value;
             }
         }
+        if (memoryKb > MAX_ARGON2_MEMORY_KB || iterations > MAX_ARGON2_ITERATIONS
+                || parallelism > MAX_ARGON2_PARALLELISM
+                || memoryKb < 0 || iterations < 0 || parallelism < 0) {
+            return false;
+        }
         index++;
 
         byte[] salt = decodeBase64(parts[index++]);
@@ -210,6 +224,9 @@ public final class PasswordHashing {
         }
         String algorithm = parts[2];
         int iterations = Integer.parseInt(parts[3]);
+        if (iterations < 0 || iterations > MAX_PBKDF2_ITERATIONS) {
+            return false;
+        }
         byte[] salt = decodeBase64(parts[4]);
         byte[] expected = decodeBase64(parts[5]);
         byte[] actual = pbkdf2(password, salt, iterations, algorithm, expected.length * 8);

@@ -70,7 +70,11 @@ public final class LocalBus implements NetworkBus {
         if (durationMillis <= 0) {
             return;
         }
-        sessions.put(key(player), new Session(address, System.currentTimeMillis() + durationMillis));
+        long now = System.currentTimeMillis();
+        // Sessão só era descartada quando alguém perguntava por ela. Quem não voltasse
+        // deixava a entrada parada para sempre.
+        sessions.values().removeIf(session -> session.expiresAt <= now);
+        sessions.put(key(player), new Session(address, now + durationMillis));
     }
 
     @Override

@@ -87,7 +87,10 @@ public final class AccountSettings {
         if (value == null) {
             values.remove(key);
         } else {
-            values.put(key, value);
+            // O ';' separa as entradas, então um valor que o contenha viraria duas na
+            // próxima leitura. O '=' não precisa de tratamento: o parse corta na
+            // primeira ocorrência, e o resto fica inteiro no valor.
+            values.put(key, value.replace(';', ' '));
         }
     }
 
