@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>br.vituz.core</groupId>
+        <artifactId>vlogin-parent</artifactId>
+        <version>1.1.0</version>
+    </parent>
+
+    <artifactId>vlogin-bukkit</artifactId>
+    <name>vLogin Bukkit</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>br.vituz.core</groupId>
+            <artifactId>vlogin-common</artifactId>
+        </dependency>
+        <!--
+          Compilado contra a API mais antiga que suportamos, para nada mais novo
+          entrar no bytecode sem querer. O que veio depois da 1.8 é alcançado por
+          reflexão.
+        -->
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot-api</artifactId>
+            <version>${spigot.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!--
+          O servidor já traz o Netty. Precisamos dele só para compilar o handler que
+          entra na pipeline de login, e por isso o escopo é provided: nada de Netty
+          vai para dentro da jar.
+        -->
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+            <version>4.1.72.Final</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>

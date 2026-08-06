@@ -1,0 +1,493 @@
+# vLogin - configuração
+#
+# Um arquivo só, agrupado pelo que você quer mudar, não por subsistema.
+# Opções ausentes usam o valor padrão embutido; nada aqui é reescrito pelo plugin,
+# então seus comentários e sua formatação continuam intactos entre atualizações.
+#
+# Mensagens ficam em messages/pt-br.yml.
+
+
+# Idioma. Corresponde a um arquivo em messages/ (pt-br, en).
+language: pt-br
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  STORAGE: onde as contas ficam guardadas
+# ─────────────────────────────────────────────────────────────────────────────
+storage:
+  # sqlite | mysql | mariadb
+  driver: sqlite
+
+  sqlite:
+    file: "plugins/vLogin/accounts.db"
+
+  sql:
+    host: "127.0.0.1"
+    port: 3306
+    database: "vlogin"
+    username: "root"
+    password: ""
+
+    # Parâmetros anexados à URL de conexão.
+    options:
+      useUnicode: true
+      characterEncoding: utf8
+      #useSSL: false
+
+    pool:
+      max-connections: 10
+      min-idle: 5
+      max-lifetime-ms: 1800000
+      timeout-ms: 5000
+
+  # Nome da tabela e das colunas.
+  #
+  # Para adotar uma tabela que já existe (vinda de outro plugin de login), aponte
+  # estas opções para ela. Colunas que faltarem são criadas na inicialização, e o
+  # formato de cada hash é detectado individualmente: BCrypt, Argon2, PBKDF2, SHA
+  # e MD5 convivem na mesma tabela sem conversão.
+  schema:
+    table: "vituz_accounts"
+    columns:
+      id: "id"
+      username: "nickname"
+      uuid: "player_id"
+      premium-uuid: "mojang_id"
+      bedrock-uuid: "xbox_id"
+      password: "secret"
+      address: "last_address"
+      last-login: "last_login"
+      registered-at: "created_at"
+      email: "email"
+      discord: "discord"
+      flags: "flags"
+
+  # Banco de origem para "/vlogin import" e "/vlogin nlogin": as contas são
+  # copiadas daqui para o storage ativo acima. Mesmo formato da seção "storage".
+  #
+  # A origem é aberta SOMENTE PARA LEITURA. Nenhuma tabela é criada, nenhuma
+  # coluna é alterada, nada é apagado. Se a migração der errado no meio, o plugin
+  # antigo continua funcionando exatamente como estava.
+  import:
+    # nlogin  → assume a tabela e as colunas do nLogin (é o que "/vlogin nlogin" usa)
+    # vlogin  → assume o mesmo layout do "schema" acima, para copiar de outro vLogin
+    # custom  → usa o "schema" logo abaixo
+    preset: nlogin
+
+    driver: mysql
+    sqlite:
+      file: "plugins/vLogin/import.db"
+    sql:
+      host: "127.0.0.1"
+      port: 3306
+      database: "nlogin"
+      username: "root"
+      password: ""
+
+    # Só é lido com preset: custom. Colunas que faltarem na origem viram vazio;
+    # id, nickname e senha são as únicas obrigatórias.
+    schema:
+      table: "nlogin"
+      columns:
+        id: "ai"
+        username: "last_name"
+        uuid: "unique_id"
+        premium-uuid: "mojang_id"
+        bedrock-uuid: "bedrock_id"
+        password: "password"
+        address: "last_ip"
+        last-login: "last_seen"
+        registered-at: "creation_date"
+        email: "email"
+        discord: "discord"
+        flags: "settings"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  NETWORK: papel deste servidor na rede
+# ─────────────────────────────────────────────────────────────────────────────
+network:
+  # auto       → proxy se for proxy, standalone se for backend
+  # standalone → este servidor autentica por conta própria
+  # backend    → um proxy com vLogin na frente é quem autentica; este servidor
+  #              confia na mensagem assinada com o secret.key
+  role: auto
+
+  # Identificador deste nó nas mensagens do Redis. Em branco = gerado automaticamente.
+  # Preencha se você quiser reconhecer os nós pelo nome nos logs.
+  node-id: ""
+
+  # Servidores onde a autenticação acontece (apenas em proxy).
+  auth-servers: []
+  #- 'login'
+
+  # Impede que o jogador caia em outro servidor antes de autenticar.
+  first-server-lock: true
+
+  # Permite que um servidor de backend peça a execução de comandos no console DESTE
+  # proxy (o prefixo "@proxy" na lista de comandos pós-login).
+  #
+  # Desligado por padrão porque é um console remoto: com isso ligado, um único
+  # backend comprometido executa qualquer comando no proxy. Só ligue se você usa
+  # "@proxy" e confia em todos os backends.
+  allow-backend-commands: false
+
+  post-login:
+    # Encaminha o jogador assim que ele autentica (apenas em proxy).
+    enabled: false
+    servers: []
+    #- 'lobby-01'
+    #- 'lobby-02'
+    delay-ms: 500
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  REDIS: necessário quando existe MAIS DE UM PROXY
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Sem Redis, cada proxy conhece só as próprias sessões: um jogador que troca de
+# proxy autentica de novo, e a checagem de "já está online" não enxerga o outro
+# lado. Com Redis, login, logout, sessões e presença são compartilhados.
+#
+# Ligue nos proxies. Nos backends é opcional, serve para propagar logout e kick.
+redis:
+  enabled: false
+  host: "127.0.0.1"
+  port: 6379
+
+  # Deixe o usuário em branco para autenticar só com a senha (Redis < 6).
+  username: ""
+  password: ""
+
+  ssl: false
+  database: 0
+
+  # Prefixo dos canais e das chaves. Use um valor diferente por rede se você
+  # compartilha o mesmo Redis entre projetos.
+  channel: "vlogin"
+
+  timeout-ms: 3000
+  pool:
+    max-connections: 8
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  LOGIN: o fluxo de autenticação
+# ─────────────────────────────────────────────────────────────────────────────
+login:
+  # Tempo para autenticar antes de ser desconectado. 0 desativa.
+  timeout-seconds: 45
+
+  # Senhas erradas permitidas por sessão antes de desconectar.
+  # Com 1 (padrão), erra e cai na hora.
+  max-attempts: 1
+
+  lockout:
+    # Bloqueia o IP temporariamente depois de muitas tentativas.
+    enabled: true
+
+    # Tentativas erradas ACUMULADAS pelo mesmo IP (somando reconexões) antes do
+    # bloqueio. É de propósito um número diferente de "max-attempts": derrubar
+    # quem errou a senha é uma coisa, bloquear o IP por quinze minutos por causa
+    # de um erro de digitação é outra.
+    after-attempts: 10
+
+    minutes: 15
+
+  session:
+    # Quem voltar dentro do prazo não digita a senha de novo.
+    # Desligue aqui se você prefere que a senha seja pedida em toda entrada.
+    enabled: true
+
+    # Duração da sessão. É o que define por quanto tempo a conta fica acessível
+    # sem senha depois que o jogador sai. Quanto menor, menor a exposição.
+    minutes: 5
+
+    # Exige que a reconexão venha do MESMO IP para a sessão valer.
+    #
+    #  true  (padrão) → só quem está no mesmo endereço retoma. O custo é que trocar
+    #                   de rede (wi-fi para dados móveis) obriga a digitar a senha.
+    #
+    #  false          → a sessão vale para qualquer conexão com aquele nickname.
+    #                   Isso significa que, durante os minutos acima, QUALQUER
+    #                   pessoa que digite o nick entra sem senha. Só faz sentido
+    #                   com uma duração bem curta, e ainda assim é arriscado.
+    #
+    # (!) Se a sua preocupação é gente dividindo o mesmo IP (CGNAT, rede de escola,
+    #     mesma casa), o ajuste NÃO é desligar isto, e sim manter em true e reduzir os
+    #     minutos, ou desligar a sessão em "enabled" acima. O mesmo IP é justamente
+    #     o que o vLogin usa para reconhecer a pessoa; não há como distinguir dois
+    #     jogadores atrás do mesmo endereço.
+    bind-to-address: true
+
+  # Permite reconectar do mesmo IP mesmo com a sessão anterior ainda aberta,
+  # em vez de recusar com "você já está online".
+  same-address-relogin: true
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  PASSWORD: regras e hashing
+# ─────────────────────────────────────────────────────────────────────────────
+password:
+  length:
+    min: 5
+    max: 32
+
+  # Algoritmo das senhas NOVAS. A verificação não depende desta opção: o formato
+  # de cada hash é detectado pelo prefixo, e senhas em formato antigo são
+  # regravadas neste algoritmo no primeiro login bem-sucedido.
+  #
+  # argon2id | argon2i | argon2d | bcrypt2a | bcrypt2y | bcrypt2b | pbkdf2 | sha512 | sha256 | md5
+  algorithm: argon2id
+
+  argon2:
+    iterations: 3
+    # Memória por verificação, em MB. Valores altos com muitos logins ao mesmo
+    # tempo consomem RAM proporcionalmente.
+    memory-mb: 64
+    parallelism: 1
+
+  bcrypt:
+    cost: 10
+
+  pbkdf2:
+    iterations: 10000
+    mac: "HmacSHA512"
+
+  strength:
+    # Exige senha forte no registro.
+    enabled: false
+    # Padrão: número, maiúscula, minúscula e símbolo.
+    pattern: '(?=\S*\d)(?=\S*[A-Z])(?=\S*[a-z])(?=\S*[!@#$%^&*?])\S*$'
+
+  # Senhas recusadas, em minúsculo.
+  forbidden:
+  - '123456'
+  - '12345678'
+  - 'password'
+  - 'senha123'
+  - 'minecraft'
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  ACCOUNTS: nicknames, contas originais e Bedrock
+# ─────────────────────────────────────────────────────────────────────────────
+accounts:
+  # Nicknames fora deste padrão são recusados antes de entrar.
+  username-pattern: '([a-zA-Z0-9_]{3,16})'
+
+  premium:
+    # Quando perguntar à Mojang se um nickname tem dono.
+    #
+    #  off        nunca pergunta
+    #  verify     pergunta, e quem comprovar a conta entra sem senha
+    #  exclusive  igual ao verify, e ainda protege o nickname quando não dá para
+    #             comprovar: em vez de deixar qualquer um usá-lo, recusa a entrada
+    #
+    # A pergunta só acontece para quem AINDA NÃO TEM SENHA aqui. Quem já registrou
+    # uma continua entrando com ela, sem consulta nenhuma, mesmo que o nickname
+    # exista na Mojang: a conta é de quem a criou aqui primeiro.
+    #
+    # Comprovar quer dizer o servidor exigir a autenticação de verdade na Mojang.
+    # Isso é possível num proxy, num servidor com online-mode=true, e num Paper
+    # sozinho com standalone-auth ligado (logo abaixo). Onde nada disso vale, o
+    # verify deixa a pessoa registrar com senha e o exclusive recusa.
+    #
+    # Contas que JÁ estão ligadas a uma conta da Mojang (por /original ou por uma
+    # entrada anterior) continuam entrando direto mesmo com off. O off vale para
+    # nickname novo; ele não desfaz vínculo que já existe.
+    #
+    # Se a Mojang não responder, quem é afetado é só quem ainda não tem senha aqui:
+    # a entrada dessas pessoas é recusada até a consulta voltar. Tratar como offline
+    # seria entregar o nickname a quem chegasse durante a queda. Quem já tem senha
+    # entra normalmente.
+    mode: "exclusive"
+
+    # Deixa entrar sem senha quem comprovou a conta. Desligue para exigir senha de
+    # todo mundo, inclusive de quem é original.
+    auto-login: true
+
+    # Dispensa o registro de quem é original: a conta é criada sem senha nenhuma.
+    # Com false, mesmo quem comprova a conta precisa criar uma senha na primeira vez,
+    # e é ela que serve de reserva se um dia a comprovação deixar de funcionar.
+    skip-password: true
+
+    # Autentica contas originais num Paper/Spigot SOZINHO, sem proxy na frente.
+    #
+    # Num servidor offline o Bukkit não tem como pedir a comprovação da conta: quando
+    # o plugin é avisado da conexão, a fase de login já terminou. Com isto ligado, o
+    # vLogin entra na pipeline de rede antes disso e coloca o login no mesmo trilho de
+    # um servidor online mode, então quem tem conta na Mojang entra sem senha e com a
+    # skin, e quem não tem segue registrando normalmente.
+    #
+    # Não faz nada, e nem é instalado, quando o servidor já está em online mode ou
+    # quando está atrás de um proxy: nesses casos quem autentica é o proxy.
+    #
+    # Se a versão do servidor não for compatível, o plugin avisa no console e todo
+    # mundo entra com senha. Falha aqui nunca abre uma conta.
+    standalone-auth: true
+
+    # Pergunta ao jogador, depois do login, se a conta dele é original.
+    ask-on-login: true
+
+  bedrock:
+    # Autentica jogadores Bedrock sem pedir senha.
+    #
+    # Com o Floodgate instalado isso é seguro: ele já autenticou a conta Xbox antes
+    # de o jogador chegar. Sem o Floodgate, o vLogin só consegue olhar o formato do
+    # UUID, o que é indício e não prova.
+    auto-login: true
+
+    # Dispensa o jogador Bedrock de criar uma senha.
+    # Desligue se você usa a senha em alguma integração web.
+    skip-password: true
+
+    floodgate:
+      # Usar a API do Floodgate para identificar contas Bedrock.
+      # Se o Floodgate não estiver instalado, o vLogin cai sozinho na heurística de
+      # UUID e avisa no console, não é preciso mexer aqui.
+      enabled: true
+
+      # Prefixo que o Floodgate adiciona aos nicknames Bedrock. Vale o que o próprio
+      # Floodgate informar; este valor só é usado se ele não informar nada.
+      # Precisa ser igual ao "username-prefix" do config do Floodgate.
+      username-prefix: "."
+
+      # Padrão de nickname aceito para jogadores Bedrock.
+      #
+      # (!) Sem isto eles seriam recusados: gamertags têm até 16 caracteres, aceitam
+      #     espaço (que o Floodgate troca por "_") e chegam com o prefixo acima,
+      #     nada disso passa no "username-pattern" dos jogadores Java.
+      username-pattern: '(\.?[a-zA-Z0-9_ ]{1,20})'
+
+      # Mantém o UUID que já está no banco em vez de adotar o do Floodgate.
+      #
+      # Serve para quem trouxe contas de outro plugin e tem inventário, economia ou
+      # permissões amarrados ao UUID antigo.
+      keep-stored-uuid: false
+
+      # Só autentica automaticamente quem tem conta Java vinculada no Floodgate.
+      # Quem não tiver vínculo entra pelo caminho normal, com senha.
+      require-linked: false
+
+  address-limit:
+    enabled: false
+    max: 3
+
+    # Além de barrar o registro, barra a entrada de contas acima do limite.
+    block-login: false
+
+    exempt:
+      registered: true
+      premium: true
+      bedrock: true
+
+    allowlist:
+    - '127.0.0.1'
+    - 'localhost'
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  PROTECTION: o que o jogador não autenticado pode fazer
+# ─────────────────────────────────────────────────────────────────────────────
+protection:
+  # Trava o jogador no lugar. Olhar em volta continua liberado.
+  freeze: true
+
+  # Esvazia o inventário visível até o login e devolve depois. Sem isso, qualquer
+  # pessoa vê os itens de uma conta só entrando com o nick dela.
+  hide-inventory: true
+
+  # Jogadores não autenticados ficam invisíveis para os outros.
+  hide-players: true
+
+  # Esconde velocidade, voo e afins. Desligue em caso de conflito com lobby.
+  hide-attributes: true
+
+  blindness: false
+
+  # Teleporta para o bloco mais alto ao entrar, quando não há spawn definido.
+  safe-spawn: false
+
+  # Usa o ponto definido por "/vlogin spawn set" como local de login.
+  spawn-point: true
+
+  # Nicknames que pulam a autenticação inteira (MODs e plugins que fingem ser
+  # jogadores). Use por sua conta e risco.
+  exempt-usernames: []
+
+  # Títulos de inventário que continuam abrindo antes do login.
+  allowed-inventories: []
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  INTERFACE: o que o jogador vê
+# ─────────────────────────────────────────────────────────────────────────────
+interface:
+  title: true
+  action-bar: true
+  countdown: true
+  sounds: true
+
+  # Esconde o chat do servidor de quem ainda não autenticou.
+  hide-chat: true
+
+  hide-join-message: true
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  COMMANDS
+# ─────────────────────────────────────────────────────────────────────────────
+commands:
+  # Subcomandos de /vlogin que SÓ funcionam pelo console.
+  # Uma conta de administrador invadida não deve conseguir tomar registros,
+  # trocar senhas ou apagar contas.
+  console-only:
+  - create
+  - delete
+  - setpass
+  - setuuid
+  - grant
+  - prune
+  - import
+  - nlogin
+  - export
+
+  # Mantém a lista acima como um piso: subcomandos perigosos que o plugin conhece
+  # continuam só no console mesmo que a sua lista não os mencione.
+  #
+  # Existe porque a lista acima foi escrita em uma versão do plugin. Um subcomando
+  # perigoso criado depois ficaria de fora dela e viraria executável in-game numa
+  # simples atualização. Com false, vale exatamente o que estiver na sua lista.
+  console-only-floor: true
+
+  # Executados depois do registro e depois do login.
+  #
+  # Prefixos: @console (executa pelo console), @delay <ticks>, @proxy (executa no
+  # proxy), @server <a,b> (só nesses servidores). @player vira o nickname.
+  on-register: []
+  #- "@console tell @player Bem-vindo!"
+  #- "@delay 40 /kit inicial"
+
+  on-login: []
+  #- "@console @proxy send @player lobby"
+
+  # Remove do log do console a senha digitada em /logar, /registrar e /trocarsenha.
+  #
+  # O servidor grava a linha do comando ANTES de qualquer plugin poder cancelar,
+  # então sem isso a senha vai parar no console e no arquivo de log. Comandos sem
+  # argumento continuam aparecendo, para o histórico de quem tentou entrar.
+  redact-passwords-in-log: true
+
+  # Comandos liberados antes de autenticar, além dos próprios comandos de login.
+  allowed-before-login: []
+  #- "/suporte"
+
+  # Nomes dos comandos. O primeiro da lista é o principal.
+  aliases:
+    login: [logar, login, log]
+    register: [registrar, register, reg]
+    changepassword: [trocarsenha, mudarsenha, changepassword]
+    logout: [deslogar, logout, sair]
+    premium: [original, premium]
+    offline: [offline, pirata, cracked]

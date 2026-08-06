@@ -1,0 +1,141 @@
+# vLogin — textos em português
+#
+# Cores com & (ex.: &a) ou &#RRGGBB para hexadecimal, a partir da 1.16.
+# O que estiver entre chaves é substituído pelo plugin: {player}, {min}...
+# \n quebra a linha, o que serve nas telas de desconexão.
+#
+# Apagar uma linha não quebra nada: o texto embutido entra no lugar.
+
+prefix: "&8[&bvLogin&8] &r"
+
+# entrada e cadastro
+auth:
+  register-request: "&fCrie sua senha para entrar&7: &b/registrar <senha> <senha>"
+  register-title: "&b&lCRIE SUA SENHA"
+  register-subtitle: "&7digite &f/registrar <senha> <senha>"
+  registered: "&aPronto! Sua senha foi criada."
+  already-registered: "&cVocê já tem uma senha criada."
+  register-linked: "&cEste nickname pertence a uma conta original ou Bedrock.\n&7Entre por ela para poder criar uma senha aqui."
+  password-mismatch: "&cAs duas senhas precisam ser iguais."
+  register-usage: "&cFaltou repetir a senha&7: &b/registrar <senha> <senha>"
+  register-address-limit: "&cEste endereço já tem &b{limit} &ccontas."
+  login-request: "&fEntre com sua senha&7: &b/logar <senha>"
+  login-title: "&b&lENTRE COM SUA SENHA"
+  login-subtitle: "&7digite &f/logar <senha>"
+  logged-in: "&aBem-vindo de volta!"
+  already-logged: "&cVocê já entrou."
+  not-registered: "&cEste nickname ainda não tem senha criada."
+  wrong-password: "&cSenha errada. &7Tentativa {attempts} de {max}."
+  login-usage: "&cFaltou a senha&7: &b/logar <senha>"
+  session-resumed: "&aReconhecemos você, pode jogar."
+  premium-auto: "&aConta da Mojang confirmada, sem senha desta vez."
+  bedrock-auto: "&aConta Xbox confirmada, sem senha desta vez."
+  logged-out: "&aSaímos da sua conta. Entre de novo quando quiser."
+
+# regras de senha
+password:
+  changed: "&aSenha trocada."
+  change-usage: "&cInforme a senha de agora e a nova&7: &b/trocarsenha <atual> <nova>"
+  wrong-current: "&cA senha de agora não confere."
+  too-short: "&cA senha ficou curta. &7Mínimo de &b{min} &7caracteres."
+  too-long: "&cA senha ficou longa. &7Máximo de &b{max} &7caracteres."
+  weak: "&cEssa senha é fácil demais. &7Misture maiúsculas, minúsculas, números e símbolos."
+  forbidden: "&cEssa senha está entre as mais usadas do mundo. Escolha outra."
+  equals-username: "&cA senha não pode ser o seu próprio nickname."
+
+# vínculo com a Mojang
+account:
+  premium-enabled: "&aConta ligada à Mojang. Entre de novo para valer."
+  premium-disabled: "&aConta desligada da Mojang. Volte a usar a senha."
+  premium-not-found: "&cA Mojang não tem nenhuma conta com este nickname."
+  already-premium: "&cSua conta já está ligada à Mojang."
+  not-premium: "&cSua conta não está ligada à Mojang."
+  premium-question: "&7Tem conta da Mojang? &b/original &7dispensa a senha nas próximas entradas."
+
+# telas de desconexão
+disconnect:
+  timeout: "&cTempo esgotado. &7Entre de novo e digite a senha."
+  lockout: "&cSenha errada vezes demais.\n&7Espere &b{minutes} &7minutos antes de tentar outra vez."
+  invalid-username: "&cEste nickname tem caracteres que o servidor não aceita."
+  already-online: "&cEste nickname já está em jogo agora."
+  address-limit: "&cEste endereço chegou ao limite de &b{limit} &ccontas."
+  premium-only: "&cEste nickname é de uma conta da Mojang."
+  verification-unavailable: "&cA Mojang não respondeu para confirmar este nickname.\n&7Tente daqui a alguns minutos."
+  storage-error: "&cNão consegui checar sua conta agora. &7Tente daqui a pouco."
+  wrong-password: "&cSenha errada."
+  not-authenticated: "&cEntre com sua senha antes."
+  unregistered: "&cSua conta foi apagada."
+
+# o que fica travado antes de entrar
+blocked:
+  chat: "&cSó dá para conversar depois de entrar."
+  command: "&cSó dá para usar comandos depois de entrar."
+  action: "&cIsso só depois de entrar."
+  countdown: "&7restam &b{seconds}s &7para entrar"
+
+# comandos de administração
+admin:
+  usage: "&cSubcomando desconhecido. &b/vlogin help &cmostra a lista."
+  help-header: "&8┌ &bvLogin &8· comandos"
+  help-entry: "&8│ &b{command} &8· &7{description}"
+  reloaded: "&aConfiguração relída."
+  not-found: "&cNão achei nenhuma conta chamada &b{player}&c."
+  console-only: "&b{command} &csó roda pelo console. &7É proposital."
+  registered: "&aConta &b{player} &acriada."
+  unregistered: "&aConta &b{player} &aapagada."
+  password-changed: "&aSenha de &b{player} &adefinida."
+  uuid-changed: "&b{player} &aagora usa o UUID &b{uuid}&a."
+  uuid-invalid: "&cNão entendi. Passe um UUID, ou &boffline&c, ou &bpremium&c."
+  address-cleared: "&aEsqueci o endereço guardado de &b{player}&a."
+  unbanned: "&b{address} &aliberado."
+  not-blocked: "&b{address} &cnão está bloqueado."
+  forced-login: "&b{player} &aentrou sem precisar da senha."
+  not-online: "&b{player} &cnão está em jogo."
+  spawn-set: "&aMarquei este ponto para o login."
+  spawn-missing: "&cNenhum ponto marcado ainda. Fique onde quer e use &b/vlogin spawn set&c."
+  spawn-unsupported: "&cIsso precisa de um mundo; o proxy não tem coordenadas."
+  prune-usage: "&cInforme os dias e repita com &bconfirmar&c: &b/vlogin prune 90 confirmar"
+  prune-preview: "&7Encontrei &e{count} &7contas paradas há mais de &e{days} &7dias. Nada foi apagado ainda."
+  pruned: "&a{count} contas apagadas."
+  export-done: "&a{count} contas gravadas em &b{file}&a."
+  export-failed: "&cNão consegui gravar o arquivo: {error}"
+  import-usage: "&cIsto copia contas de outro banco. Repita com &b/vlogin import confirmar&c."
+  import-start: "&7Lendo &b{table} &7em &8{driver}&7, somente leitura..."
+  import-found: "&7Encontrei &e{count} &7contas na origem. Copiando..."
+  import-progress: "&8· &7{done} de {total}"
+  import-done: "&a{imported} contas trazidas &8· &7{skipped} já existiam &8· &7{failed} com problema &8· &7{seconds}s"
+  import-failed: "&cA cópia parou: {error}"
+  nlogin-usage: "&cIsto copia as contas do nLogin para cá, sem tocar no banco dele.\n&7Confira &bstorage.import.sql &7no config e repita com &b/vlogin nlogin confirmar&c."
+  busy: "&cTem outra operação rodando. Espere ela terminar."
+  diagnose-header: "&8┌ &bvLogin &8· diagnóstico"
+  diagnose-row: "&8│ &7{name} &8· &f{value}"
+
+# ficha de /vlogin info
+info:
+  header: "&8┌ &b{player}"
+  row: "&8│ &7{label} &8· &f{value}"
+  footer: "&8└ &8{ms} ms"
+  state-online: "&aentrou"
+  state-pending: "&eaguardando senha"
+  never: "&8nunca"
+  type-premium: "conta original"
+  type-bedrock: "conta bedrock"
+  type-offline: "conta com senha"
+  type-unregistered: "sem cadastro"
+  label:
+    state: "situação"
+    last-seen: "visto em"
+    created: "criada em"
+    uuid: "identidade"
+    address: "endereço"
+    xbox: "xbox"
+    paired: "pareada com"
+    neighbours: "mesmo endereço"
+    server: "jogando em"
+
+# diversos
+general:
+  no-permission: "&cVocê não tem permissão para isso."
+  player-only: "&cSó quem está em jogo pode usar isso."
+  storage-error: "&cAlgo falhou aqui dentro. Avise quem administra o servidor."
+  cooldown: "&cCalma, espere um instante."

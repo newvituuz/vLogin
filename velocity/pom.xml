@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>br.vituz.core</groupId>
+        <artifactId>vlogin-parent</artifactId>
+        <version>1.1.0</version>
+    </parent>
+
+    <artifactId>vlogin-velocity</artifactId>
+    <name>vLogin Velocity</name>
+
+    <properties>
+        <!-- The Velocity 3 API is built for Java 17; only this module needs it. -->
+        <java.release>17</java.release>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>br.vituz.core</groupId>
+            <artifactId>vlogin-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.velocitypowered</groupId>
+            <artifactId>velocity-api</artifactId>
+            <version>${velocity.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>

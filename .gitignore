@@ -1,0 +1,37 @@
+# Dados do servidor de produção. NÃO REMOVA ESTA LINHA.
+#
+# Esta pasta tem as credenciais do MySQL, o token do bot do Discord, a senha do
+# SMTP, o secret.key que assina as mensagens entre proxy e backend, e o banco com
+# as contas e os hashes de senha de todo mundo. Nada disso pode ir para o GitHub,
+# público ou privado.
+nlogin/
+
+# Cópia do servidor, grande demais para o GitHub e cheia dos mesmos segredos.
+vLogin.zip
+
+# Saída de build. A jar entra numa Release, não no repositório.
+target/
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# Bancos locais e arquivos de teste
+*.db
+*.db-journal
+*.db-wal
+export-*.csv
+
+# Segredos que o próprio plugin gera em tempo de execução
+secret.key
+plugins/
+
+# IDE e sistema operacional
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+nbproject/
+Thumbs.db
+desktop.ini
+.DS_Store

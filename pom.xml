@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>br.vituz.core</groupId>
+    <artifactId>vlogin-parent</artifactId>
+    <version>1.1.0</version>
+    <packaging>pom</packaging>
+    <name>vLogin</name>
+    <description>Authentication plugin for Bukkit/Spigot/Paper, BungeeCord and Velocity</description>
+
+    <modules>
+        <module>common</module>
+        <module>bukkit</module>
+        <module>bungee</module>
+        <module>velocity</module>
+        <module>dist</module>
+    </modules>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.release>8</java.release>
+
+        <snakeyaml.version>2.2</snakeyaml.version>
+        <bouncycastle.version>1.78.1</bouncycastle.version>
+        <hikari.version>4.0.3</hikari.version>
+        <sqlite.version>3.46.0.0</sqlite.version>
+        <mysql.version>8.4.0</mysql.version>
+        <mariadb.version>3.4.0</mariadb.version>
+        <slf4j.version>1.7.36</slf4j.version>
+        <jedis.version>4.4.6</jedis.version>
+        <log4j.version>2.19.0</log4j.version>
+        <floodgate.version>2.2.5-SNAPSHOT</floodgate.version>
+
+        <spigot.version>1.8.8-R0.1-SNAPSHOT</spigot.version>
+        <bungee.version>1.21-R0.4</bungee.version>
+        <velocity.version>3.4.0</velocity.version>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>spigotmc-repo</id>
+            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+        </repository>
+        <repository>
+            <id>papermc-repo</id>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
+        </repository>
+        <repository>
+            <id>opencollab</id>
+            <url>https://repo.opencollab.dev/main/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>sonatype</id>
+            <url>https://oss.sonatype.org/content/groups/public/</url>
+        </repository>
+        <repository>
+            <id>dmulloy2-repo</id>
+            <url>https://repo.dmulloy2.net/repository/public/</url>
+        </repository>
+        <repository>
+            <id>codemc-repo</id>
+            <url>https://repo.codemc.io/repository/maven-releases/</url>
+        </repository>
+        <repository>
+            <id>codemc-snapshots</id>
+            <url>https://repo.codemc.io/repository/maven-snapshots/</url>
+        </repository>
+    </repositories>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>br.vituz.core</groupId>
+                <artifactId>vlogin-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>br.vituz.core</groupId>
+                <artifactId>vlogin-bukkit</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>br.vituz.core</groupId>
+                <artifactId>vlogin-bungee</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>br.vituz.core</groupId>
+                <artifactId>vlogin-velocity</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.13.0</version>
+                    <configuration>
+                        <release>${java.release}</release>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>3.5.3</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>3.4.1</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

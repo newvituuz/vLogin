@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>br.vituz.core</groupId>
+        <artifactId>vlogin-parent</artifactId>
+        <version>1.1.0</version>
+    </parent>
+
+    <artifactId>vlogin-dist</artifactId>
+    <name>vLogin Distribution</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>br.vituz.core</groupId>
+            <artifactId>vlogin-bukkit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>br.vituz.core</groupId>
+            <artifactId>vlogin-bungee</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>br.vituz.core</groupId>
+            <artifactId>vlogin-velocity</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>vLogin-${project.version}</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <shadedArtifactAttached>false</shadedArtifactAttached>
+                            <!--
+                              minimizeJar is deliberately off: this module has no sources
+                              of its own, so shade finds no roots to walk from and strips
+                              the plugin itself. BouncyCastle — the one dependency big
+                              enough to matter — is trimmed by the explicit filter below.
+                            -->
+
+                            <relocations>
+                                <relocation>
+                                    <pattern>org.yaml.snakeyaml</pattern>
+                                    <shadedPattern>br.vituz.core.vlogin.libs.snakeyaml</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.bouncycastle</pattern>
+                                    <shadedPattern>br.vituz.core.vlogin.libs.bouncycastle</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.zaxxer.hikari</pattern>
+                                    <shadedPattern>br.vituz.core.vlogin.libs.hikari</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.slf4j</pattern>
+                                    <shadedPattern>br.vituz.core.vlogin.libs.slf4j</shadedPattern>
+                                </relocation>
+                                <!--
+                                  Jedis and its dependencies. Other plugins frequently
+                                  ship their own Jedis, and two unrelocated copies on the
+                                  same class loader break whichever one loads second.
+                                -->
+                                <relocation>
+                                    <pattern>redis.clients.jedis</pattern>
+                                    <shadedPattern>br.vituz.core.vlogin.libs.jedis</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.commons.pool2</pattern>
+                                    <shadedPattern>br.vituz.core.vlogin.libs.pool2</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.google.gson</pattern>
+                                    <shadedPattern>br.vituz.core.vlogin.libs.gson</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.json</pattern>
+                                    <shadedPattern>br.vituz.core.vlogin.libs.json</shadedPattern>
+                                </relocation>
+                                <!--
+                                  Drivers JDBC não são renomeados, e não é por gosto: a
+                                  biblioteca nativa do SQLite tem "org/sqlite/core/NativeDB"
+                                  gravado dentro do binário, do lado do JNI. Renomear o
+                                  pacote Java desfaz esse vínculo e o driver morre com
+                                  ClassNotFoundException logo na primeira conexão.
+
+                                  O conflito com o org.sqlite antigo que o CraftBukkit 1.8
+                                  embute é resolvido em DriverDataSource, carregando o nosso
+                                  driver num class loader próprio quando o do servidor
+                                  aparece na frente.
+                                -->
+                            </relocations>
+
+                            <filters>
+                                <!--
+                                  Only the lightweight crypto API is used (Argon2 and
+                                  BCrypt). Leaving out the provider, PQC and ASN.1 trees
+                                  saves about 5 MB and none of it is reachable from here.
+                                -->
+                                <filter>
+                                    <artifact>org.bouncycastle:bcprov-jdk18on</artifact>
+                                    <includes>
+                                        <include>org/bouncycastle/crypto/**</include>
+                                        <include>org/bouncycastle/util/**</include>
+                                        <include>org/bouncycastle/math/**</include>
+                                        <include>org/bouncycastle/internal/**</include>
+                                        <!-- CryptoServicesRegistrar touches X9ECParameters
+                                             during class initialisation, so asn1 has to
+                                             come along even though we never parse ASN.1. -->
+                                        <include>org/bouncycastle/asn1/**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.xerial:sqlite-jdbc</artifact>
+                                    <excludes>
+                                        <!--
+                                          Native binaries for platforms no Minecraft server
+                                          realistically runs on. What stays: Linux x86_64 and
+                                          aarch64, Alpine (musl) x86_64, Windows x86_64 and
+                                          Apple Silicon.
+                                        -->
+                                        <exclude>org/sqlite/native/FreeBSD/**</exclude>
+                                        <exclude>org/sqlite/native/Windows/x86/**</exclude>
+                                        <exclude>org/sqlite/native/Windows/armv7/**</exclude>
+                                        <exclude>org/sqlite/native/Windows/aarch64/**</exclude>
+                                        <exclude>org/sqlite/native/Linux/x86/**</exclude>
+                                        <exclude>org/sqlite/native/Linux/arm/**</exclude>
+                                        <exclude>org/sqlite/native/Linux/armv6/**</exclude>
+                                        <exclude>org/sqlite/native/Linux/armv7/**</exclude>
+                                        <exclude>org/sqlite/native/Linux/ppc64/**</exclude>
+                                        <exclude>org/sqlite/native/Linux/riscv64/**</exclude>
+                                        <exclude>org/sqlite/native/Linux/loongarch64/**</exclude>
+                                        <exclude>org/sqlite/native/Linux-Android/**</exclude>
+                                        <exclude>org/sqlite/native/Linux-Musl/x86/**</exclude>
+                                        <exclude>org/sqlite/native/Linux-Musl/aarch64/**</exclude>
+                                        <exclude>org/sqlite/native/Mac/x86_64/**</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                        <exclude>META-INF/versions/9/module-info.class</exclude>
+                                        <exclude>module-info.class</exclude>
+                                        <exclude>META-INF/maven/**</exclude>
+                                        <exclude>META-INF/LICENSE*</exclude>
+                                        <exclude>META-INF/NOTICE*</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+
+                            <transformers>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <manifestEntries>
+                                        <Implementation-Title>vLogin</Implementation-Title>
+                                        <Implementation-Version>${project.version}</Implementation-Version>
+                                        <Multi-Release>true</Multi-Release>
+                                    </manifestEntries>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

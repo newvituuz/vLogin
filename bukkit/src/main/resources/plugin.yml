@@ -1,0 +1,21 @@
+name: vLogin
+main: br.vituz.core.vlogin.bukkit.VLoginBukkit
+version: 1.1.0
+api-version: 1.13
+folia-supported: true
+author: Vituz
+description: Sistema de login para Bukkit, Spigot, Paper, BungeeCord e Velocity.
+load: STARTUP
+# Opcional: se estiver instalado, o servidor o carrega antes do vLogin.
+softdepend: [floodgate]
+# Os comandos sao registrados em runtime: os nomes vem do config.yml.
+permissions:
+  vlogin.admin:
+    description: Acesso aos comandos administrativos do vLogin.
+    default: op
+  vlogin.command.premium:
+    description: Permite marcar a conta como original.
+    default: true
+  vlogin.command.offline:
+    description: Permite marcar a conta como offline.
+    default: true

@@ -1,0 +1,141 @@
+# vLogin — English text
+#
+# Colours with & (e.g. &a) or &#RRGGBB for hex, from 1.16 onwards.
+# Anything in braces is filled in by the plugin: {player}, {min}...
+# \n breaks the line, which is useful on disconnect screens.
+#
+# Deleting a line breaks nothing: the built-in text takes over.
+
+prefix: "&8[&bvLogin&8] &r"
+
+# signing in and signing up
+auth:
+  register-request: "&fPick a password to get in&7: &b/register <password> <password>"
+  register-title: "&b&lPICK A PASSWORD"
+  register-subtitle: "&7type &f/register <password> <password>"
+  registered: "&aDone! Your password is set."
+  already-registered: "&cYou already have a password."
+  register-linked: "&cThis nickname belongs to a Mojang or Bedrock account.\n&7Sign in through it to set a password here."
+  password-mismatch: "&cBoth passwords have to match."
+  register-usage: "&cRepeat the password too&7: &b/register <password> <password>"
+  register-address-limit: "&cThis address already holds &b{limit} &caccounts."
+  login-request: "&fSign in with your password&7: &b/login <password>"
+  login-title: "&b&lSIGN IN"
+  login-subtitle: "&7type &f/login <password>"
+  logged-in: "&aWelcome back!"
+  already-logged: "&cYou are already in."
+  not-registered: "&cThis nickname has no password yet."
+  wrong-password: "&cWrong password. &7Attempt {attempts} of {max}."
+  login-usage: "&cThe password is missing&7: &b/login <password>"
+  session-resumed: "&aRecognised you, go ahead."
+  premium-auto: "&aMojang account confirmed, no password this time."
+  bedrock-auto: "&aXbox account confirmed, no password this time."
+  logged-out: "&aSigned you out. Come back whenever."
+
+# password rules
+password:
+  changed: "&aPassword changed."
+  change-usage: "&cGive the current one and the new one&7: &b/changepassword <current> <new>"
+  wrong-current: "&cThe current password does not match."
+  too-short: "&cThat password is short. &7At least &b{min} &7characters."
+  too-long: "&cThat password is long. &7At most &b{max} &7characters."
+  weak: "&cThat password is too easy. &7Mix upper case, lower case, digits and symbols."
+  forbidden: "&cThat one is among the most used passwords in the world. Pick another."
+  equals-username: "&cThe password cannot be your own nickname."
+
+# link with Mojang
+account:
+  premium-enabled: "&aAccount linked to Mojang. Rejoin for it to take effect."
+  premium-disabled: "&aAccount unlinked from Mojang. Back to using the password."
+  premium-not-found: "&cMojang has no account under this nickname."
+  already-premium: "&cYour account is already linked to Mojang."
+  not-premium: "&cYour account is not linked to Mojang."
+  premium-question: "&7Own a Mojang account? &b/premium &7skips the password next time."
+
+# disconnect screens
+disconnect:
+  timeout: "&cTime is up. &7Join again and type the password."
+  lockout: "&cWrong password too many times.\n&7Wait &b{minutes} &7minutes before trying again."
+  invalid-username: "&cThis nickname has characters the server will not take."
+  already-online: "&cThis nickname is already in game."
+  address-limit: "&cThis address reached the limit of &b{limit} &caccounts."
+  premium-only: "&cThis nickname belongs to a Mojang account."
+  verification-unavailable: "&cMojang did not answer to confirm this nickname.\n&7Try again in a few minutes."
+  storage-error: "&cCould not check your account right now. &7Try again shortly."
+  wrong-password: "&cWrong password."
+  not-authenticated: "&cSign in with your password first."
+  unregistered: "&cYour account was deleted."
+
+# what stays locked before signing in
+blocked:
+  chat: "&cChat opens up once you are in."
+  command: "&cCommands open up once you are in."
+  action: "&cThat only works once you are in."
+  countdown: "&7{seconds}s left to sign in"
+
+# administration commands
+admin:
+  usage: "&cUnknown sub-command. &b/vlogin help &cshows the list."
+  help-header: "&8┌ &bvLogin &8· commands"
+  help-entry: "&8│ &b{command} &8· &7{description}"
+  reloaded: "&aConfiguration re-read."
+  not-found: "&cFound no account called &b{player}&c."
+  console-only: "&b{command} &conly runs from the console. &7That is on purpose."
+  registered: "&aAccount &b{player} &acreated."
+  unregistered: "&aAccount &b{player} &adeleted."
+  password-changed: "&aPassword for &b{player} &aset."
+  uuid-changed: "&b{player} &anow uses the UUID &b{uuid}&a."
+  uuid-invalid: "&cDid not follow. Pass a UUID, or &boffline&c, or &bpremium&c."
+  address-cleared: "&aForgot the stored address of &b{player}&a."
+  unbanned: "&b{address} &acleared."
+  not-blocked: "&b{address} &cis not blocked."
+  forced-login: "&b{player} &agot in without the password."
+  not-online: "&b{player} &cis not in game."
+  spawn-set: "&aMarked this spot for signing in."
+  spawn-missing: "&cNo spot marked yet. Stand where you want it and use &b/vlogin spawn set&c."
+  spawn-unsupported: "&cThis needs a world; a proxy has no coordinates."
+  prune-usage: "&cGive the days and repeat with &bconfirmar&c: &b/vlogin prune 90 confirmar"
+  prune-preview: "&7Found &e{count} &7accounts idle for over &e{days} &7days. Nothing deleted yet."
+  pruned: "&a{count} accounts deleted."
+  export-done: "&a{count} accounts written to &b{file}&a."
+  export-failed: "&cCould not write the file: {error}"
+  import-usage: "&cThis copies accounts from another database. Repeat with &b/vlogin import confirmar&c."
+  import-start: "&7Reading &b{table} &7on &8{driver}&7, read-only..."
+  import-found: "&7Found &e{count} &7accounts at the source. Copying..."
+  import-progress: "&8· &7{done} of {total}"
+  import-done: "&a{imported} accounts brought over &8· &7{skipped} were already here &8· &7{failed} had trouble &8· &7{seconds}s"
+  import-failed: "&cThe copy stopped: {error}"
+  nlogin-usage: "&cThis copies the nLogin accounts over here, without touching its database.\n&7Check &bstorage.import.sql &7in the config and repeat with &b/vlogin nlogin confirmar&c."
+  busy: "&cAnother operation is running. Let it finish."
+  diagnose-header: "&8┌ &bvLogin &8· diagnostics"
+  diagnose-row: "&8│ &7{name} &8· &f{value}"
+
+# the /vlogin info card
+info:
+  header: "&8┌ &b{player}"
+  row: "&8│ &7{label} &8· &f{value}"
+  footer: "&8└ &8{ms} ms"
+  state-online: "&ain"
+  state-pending: "&ewaiting for the password"
+  never: "&8never"
+  type-premium: "mojang account"
+  type-bedrock: "bedrock account"
+  type-offline: "password account"
+  type-unregistered: "no account"
+  label:
+    state: "status"
+    last-seen: "seen at"
+    created: "created at"
+    uuid: "identity"
+    address: "address"
+    xbox: "xbox"
+    paired: "paired with"
+    neighbours: "same address"
+    server: "playing on"
+
+# odds and ends
+general:
+  no-permission: "&cYou are not allowed to do that."
+  player-only: "&cOnly someone in game can use this."
+  storage-error: "&cSomething failed in here. Tell whoever runs the server."
+  cooldown: "&cEasy — wait a moment."

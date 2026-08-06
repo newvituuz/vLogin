@@ -1,0 +1,7 @@
+name: vLogin
+main: br.vituz.core.vlogin.bungee.VLoginBungee
+version: 1.1.0
+author: Vituz
+description: Sistema de login para Bukkit, Spigot, Paper, BungeeCord e Velocity.
+# Opcional: se estiver instalado, o proxy o carrega antes do vLogin.
+softDepends: [floodgate]
