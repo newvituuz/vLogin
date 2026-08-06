@@ -6,8 +6,11 @@
 # público ou privado.
 nlogin/
 
-# Cópia do servidor, grande demais para o GitHub e cheia dos mesmos segredos.
-vLogin.zip
+# Cópias e instantâneos do projeto ou do servidor. Um deles chegou a ter 123 MB e
+# os mesmos segredos da pasta acima; o padrão é amplo de propósito, porque o nome
+# muda ("vLogin.zip", "vLogin Main.zip") e a regra exata deixaria o próximo passar.
+*.zip
+*.tar.gz
 
 # Saída de build. A jar entra numa Release, não no repositório.
 target/

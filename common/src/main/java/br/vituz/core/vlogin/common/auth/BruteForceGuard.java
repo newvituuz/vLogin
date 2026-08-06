@@ -55,6 +55,9 @@ public final class BruteForceGuard {
 
     public int recordFailure(String address) {
         long now = System.currentTimeMillis();
+        if (failures.size() >= MAX_TRACKED_ADDRESSES && !failures.containsKey(address)) {
+            evictLeastValuable(MAX_TRACKED_ADDRESSES / 10);
+        }
         Attempts attempts = failures.computeIfAbsent(address, key -> new Attempts());
 
         int count;
@@ -91,6 +94,67 @@ public final class BruteForceGuard {
                 return now - attempts.lastFailureAt > decay;
             }
         });
+    }
+
+    /**
+     * Teto de endereços acompanhados ao mesmo tempo.
+     *
+     * Os contadores já somem sozinhos pelo decaimento, mas quem tem muitos endereços
+     * à disposição (uma botnet, ou um único bloco IPv6, que costuma dar bilhões deles)
+     * consegue criar entradas mais rápido do que elas expiram. O teto transforma isso
+     * num consumo limitado em vez de crescer até faltar memória.
+     */
+    private static final int MAX_TRACKED_ADDRESSES = 50_000;
+
+    /**
+     * Descarta os contadores que menos importam, e nunca um bloqueio ativo.
+     *
+     * A ordem é por número de falhas, e só depois por idade. Despejar simplesmente
+     * os mais antigos entregaria o ataque de bandeja: quem errou nove vezes e parou
+     * seria o primeiro a sair enquanto o atacante enche o mapa com endereços novos,
+     * e o contador da vítima voltaria a zero na décima tentativa.
+     *
+     * Para empurrar para fora uma entrada perto do limite, o atacante precisaria de
+     * milhares de endereços igualmente perto do limite, o que custa uma tentativa de
+     * senha para cada uma delas, e cada endereço que chega ao limite vira bloqueio,
+     * que esta limpeza não toca.
+     */
+    private void evictLeastValuable(int howMany) {
+        java.util.PriorityQueue<Map.Entry<String, Attempts>> leastValuable =
+                new java.util.PriorityQueue<>(howMany + 1, (first, second) -> {
+                    int byCount = Integer.compare(count(second.getValue()), count(first.getValue()));
+                    return byCount != 0 ? byCount
+                            : Long.compare(lastFailure(second.getValue()), lastFailure(first.getValue()));
+                });
+
+        for (Map.Entry<String, Attempts> entry : failures.entrySet()) {
+            if (blocked.containsKey(entry.getKey())) {
+                continue;
+            }
+            leastValuable.add(entry);
+            if (leastValuable.size() > howMany) {
+                leastValuable.poll();
+            }
+        }
+        for (Map.Entry<String, Attempts> entry : leastValuable) {
+            failures.remove(entry.getKey());
+        }
+    }
+
+    private static long lastFailure(Attempts attempts) {
+        synchronized (attempts) {
+            return attempts.lastFailureAt;
+        }
+    }
+
+    private static int count(Attempts attempts) {
+        synchronized (attempts) {
+            return attempts.count;
+        }
+    }
+
+    public int trackedAddresses() {
+        return failures.size();
     }
 
     public int failureCount(String address) {

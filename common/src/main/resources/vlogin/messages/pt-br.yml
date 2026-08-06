@@ -32,6 +32,16 @@ auth:
   bedrock-auto: "&aConta Xbox confirmada, sem senha desta vez."
   logged-out: "&aSaímos da sua conta. Entre de novo quando quiser."
 
+# vínculo com a Mojang
+account:
+  offline-needs-password: "&cDesvincular a conta da Mojang tira a sua entrada automática.\n&7Confirme com a sua senha&7: &b/offline <senha>"
+  premium-enabled: "&aConta ligada à Mojang. Entre de novo para valer."
+  premium-disabled: "&aConta desligada da Mojang. Volte a usar a senha."
+  premium-not-found: "&cA Mojang não tem nenhuma conta com este nickname."
+  already-premium: "&cSua conta já está ligada à Mojang."
+  not-premium: "&cSua conta não está ligada à Mojang."
+  premium-question: "&7Tem conta da Mojang? &b/original &7dispensa a senha nas próximas entradas."
+
 # regras de senha
 password:
   changed: "&aSenha trocada."
@@ -42,15 +52,6 @@ password:
   weak: "&cEssa senha é fácil demais. &7Misture maiúsculas, minúsculas, números e símbolos."
   forbidden: "&cEssa senha está entre as mais usadas do mundo. Escolha outra."
   equals-username: "&cA senha não pode ser o seu próprio nickname."
-
-# vínculo com a Mojang
-account:
-  premium-enabled: "&aConta ligada à Mojang. Entre de novo para valer."
-  premium-disabled: "&aConta desligada da Mojang. Volte a usar a senha."
-  premium-not-found: "&cA Mojang não tem nenhuma conta com este nickname."
-  already-premium: "&cSua conta já está ligada à Mojang."
-  not-premium: "&cSua conta não está ligada à Mojang."
-  premium-question: "&7Tem conta da Mojang? &b/original &7dispensa a senha nas próximas entradas."
 
 # telas de desconexão
 disconnect:

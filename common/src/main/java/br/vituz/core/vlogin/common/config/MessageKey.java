@@ -12,6 +12,9 @@ public enum MessageKey {
     REGISTER_SUBTITLE("auth.register-subtitle", "&7digite &f/registrar <senha> <senha>"),
     REGISTERED("auth.registered", "&aPronto! Sua senha foi criada."),
     ALREADY_REGISTERED("auth.already-registered", "&cVocê já tem uma senha criada."),
+    OFFLINE_NEEDS_PASSWORD("account.offline-needs-password",
+            "&cDesvincular a conta da Mojang tira a sua entrada automática.\n"
+            + "&7Confirme com a sua senha&7: &b/offline <senha>"),
     REGISTER_LINKED("auth.register-linked",
             "&cEste nickname pertence a uma conta original ou Bedrock.\n"
             + "&7Entre por ela para poder criar uma senha aqui."),

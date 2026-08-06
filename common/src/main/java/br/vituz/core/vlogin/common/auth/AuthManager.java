@@ -312,6 +312,12 @@ public final class AuthManager {
             return;
         }
         core.platform().scheduler().async(() -> {
+            // Quem saiu enquanto o banco respondia não precisa de sessão. O tick já
+            // limparia isso em um segundo, mas criar para depois recolher também
+            // marca presença no Redis e mexe na conta de alguém que não está aqui.
+            if (!player.isOnline()) {
+                return;
+            }
             Account account;
             try {
                 account = core.storage().findByName(name).orElse(null);
@@ -667,7 +673,33 @@ public final class AuthManager {
             return;
         }
 
-        core.platform().scheduler().async(() -> {
+        core.platform().scheduler().async(() -> registerNow(player, password, session));
+    }
+
+    /**
+     * Travas por endereço, para conferir o limite e gravar sem alguém entrar no meio.
+     *
+     * São poucas e fixas, escolhidas pelo hash do endereço: um mapa de travas por IP
+     * cresceria sem limite, que é o problema que a trava veio evitar. Dois endereços
+     * podem cair na mesma trava, e o custo disso é só um registro esperar o outro.
+     */
+    private final Object[] addressLocks = new Object[64];
+
+    {
+        for (int i = 0; i < addressLocks.length; i++) {
+            addressLocks[i] = new Object();
+        }
+    }
+
+    private Object addressLock(String address) {
+        return addressLocks[Math.floorMod(String.valueOf(address).hashCode(), addressLocks.length)];
+    }
+
+    private void registerNow(AuthPlayer player, String password, AuthSession session) {
+        // Contar e inserir precisam ser um passo só. Separados, vários registros do
+        // mesmo endereço leem a mesma contagem antes de qualquer um gravar, e todos
+        // passam por um limite que deveria ter barrado a partir do segundo.
+        synchronized (addressLock(session.address())) {
             Settings settings = core.settings();
             if (settings.addressLimitEnabled && !settings.addressAllowlist.contains(session.address())) {
                 try {
@@ -737,7 +769,7 @@ public final class AuthManager {
             player.sendMessage(core.messages().get(MessageKey.REGISTERED));
             runCommands(core.settings().onRegister, player);
             authenticate(session, AuthReason.REGISTRATION);
-        });
+        }
     }
 
     public String validatePassword(String playerName, String password) {

@@ -33,6 +33,13 @@ public final class OfflineCommand extends PlayerCommand {
             player.sendMessage(core.messages().get(MessageKey.REGISTER_REQUEST));
             return;
         }
+        // Estar logado não prova que é o dono: numa sessão retomada, ou com a senha
+        // vazada, quem está aqui pode ser outro. Desvincular derruba a entrada
+        // automática do dono de vez, então vale pedir a senha de novo.
+        if (args.length == 0 || !core.hashing().verify(args[0], account.password())) {
+            player.sendMessage(core.messages().get(MessageKey.OFFLINE_NEEDS_PASSWORD));
+            return;
+        }
 
         account.mojangId(null);
         core.auth().saveAsync(account);
