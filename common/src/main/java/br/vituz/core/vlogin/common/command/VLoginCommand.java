@@ -92,6 +92,10 @@ public final class VLoginCommand extends Command {
             sender.sendMessage(core.messages().get(MessageKey.ADMIN_CONSOLE_ONLY, "command", sub));
             return;
         }
+        if (sender.isPlayer() && targetsAnotherAdmin(sub, args)) {
+            sender.sendMessage(core.messages().get(MessageKey.ADMIN_TARGET_IS_ADMIN, "command", sub));
+            return;
+        }
 
         long started = System.nanoTime();
         switch (sub) {
@@ -166,6 +170,22 @@ public final class VLoginCommand extends Command {
             default:
                 sender.sendMessage(core.messages().get(MessageKey.ADMIN_USAGE));
         }
+    }
+
+    private static final List<String> ACCOUNT_TAKEOVER_SUBCOMMANDS =
+            Arrays.asList("setpass", "setuuid", "delete", "grant", "resetip");
+
+    /**
+     * Barra in-game o que reescreve a conta de outro administrador, mesmo que a
+     * lista console-only tenha sido afrouxada. Só alcança alvo online: para quem
+     * está fora não há como perguntar a permissão de forma confiável.
+     */
+    private boolean targetsAnotherAdmin(String sub, String[] args) {
+        if (args.length < 2 || !ACCOUNT_TAKEOVER_SUBCOMMANDS.contains(sub)) {
+            return false;
+        }
+        Optional<? extends AuthPlayer> target = core.platform().player(args[1]);
+        return target.isPresent() && target.get().hasPermission("vlogin.admin");
     }
 
     private boolean requireArgs(Sender sender, String[] args, int required) {

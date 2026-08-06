@@ -82,6 +82,7 @@ admin:
   reloaded: "&aConfiguration re-read."
   not-found: "&cFound no account called &b{player}&c."
   console-only: "&b{command} &conly runs from the console. &7That is on purpose."
+  target-is-admin: "&b{command} &ccannot be used in game against another administrator. &7Use the console."
   registered: "&aAccount &b{player} &acreated."
   unregistered: "&aAccount &b{player} &adeleted."
   password-changed: "&aPassword for &b{player} &aset."

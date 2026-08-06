@@ -77,6 +77,8 @@ public enum MessageKey {
     ADMIN_HELP_ENTRY("admin.help-entry", "&8│ &b{command} &8· &7{description}"),
     ADMIN_RELOADED("admin.reloaded", "&aConfiguração relída."),
     ADMIN_NOT_FOUND("admin.not-found", "&cNão achei nenhuma conta chamada &b{player}&c."),
+    ADMIN_TARGET_IS_ADMIN("admin.target-is-admin",
+            "&b{command} &cnão pode ser usado in-game contra outro administrador. &7Use o console."),
     ADMIN_CONSOLE_ONLY("admin.console-only", "&b{command} &csó roda pelo console. &7É proposital."),
     ADMIN_REGISTERED("admin.registered", "&aConta &b{player} &acriada."),
     ADMIN_UNREGISTERED("admin.unregistered", "&aConta &b{player} &aapagada."),

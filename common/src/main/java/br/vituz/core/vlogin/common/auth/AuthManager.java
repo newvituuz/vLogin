@@ -312,9 +312,7 @@ public final class AuthManager {
             return;
         }
         core.platform().scheduler().async(() -> {
-            // Quem saiu enquanto o banco respondia não precisa de sessão. O tick já
-            // limparia isso em um segundo, mas criar para depois recolher também
-            // marca presença no Redis e mexe na conta de alguém que não está aqui.
+            // Saiu enquanto o banco respondia.
             if (!player.isOnline()) {
                 return;
             }

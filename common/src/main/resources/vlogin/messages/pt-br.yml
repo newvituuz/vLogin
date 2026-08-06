@@ -81,6 +81,7 @@ admin:
   help-entry: "&8│ &b{command} &8· &7{description}"
   reloaded: "&aConfiguração relída."
   not-found: "&cNão achei nenhuma conta chamada &b{player}&c."
+  target-is-admin: "&b{command} &cnão pode ser usado in-game contra outro administrador. &7Use o console."
   console-only: "&b{command} &csó roda pelo console. &7É proposital."
   registered: "&aConta &b{player} &acriada."
   unregistered: "&aConta &b{player} &aapagada."

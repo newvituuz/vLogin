@@ -9,6 +9,8 @@ import br.vituz.core.vlogin.common.premium.MojangService;
 import java.util.Optional;
 
 public final class PremiumCommand extends PlayerCommand {
+    private static final long COOLDOWN_MILLIS = 3000L;
+
     public PremiumCommand(VLoginCore core) {
         super(core, "premium", "Marca a conta como original.", "original", "premium");
     }
@@ -27,6 +29,11 @@ public final class PremiumCommand extends PlayerCommand {
         }
         if (account.isPremium()) {
             player.sendMessage(core.messages().get(MessageKey.ALREADY_PREMIUM));
+            return;
+        }
+        // Sem isto, uma macro dispara consultas à Mojang em rajada.
+        if (!session.get().tryCommand(COOLDOWN_MILLIS)) {
+            player.sendMessage(core.messages().get(MessageKey.COOLDOWN));
             return;
         }
 
