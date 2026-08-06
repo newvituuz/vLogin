@@ -1,11 +1,31 @@
 # vLogin
 
-Plugin de autenticação para Minecraft, escrito do zero. Uma única jar roda em
-**Paper/Spigot/Bukkit 1.8 – 1.21.x**, **Folia**, **BungeeCord** e **Velocity**.
+Plugin de autenticação para Minecraft, escrito do zero e inspirado no **nLogin**:
+a ideia de um `/vlogin` central, o conjunto de proteções do limbo e a
+compatibilidade com o schema de contas vêm de lá, mas o código, o config e as
+mensagens são próprios. Uma única jar roda em **Paper/Spigot/Bukkit 1.8 & 1.21.x**,
+**Folia**, **BungeeCord** e **Velocity**.
 
-Não há loader: a mesma jar carrega os três descritores (`plugin.yml`, `bungee.yml`,
+A mesma jar carrega os três descritores (`plugin.yml`, `bungee.yml`,
 `velocity-plugin.json`) e cada plataforma escolhe o seu. As dependências vêm
 embutidas e renomeadas, então não há conflito com outros plugins.
+
+## Antes de usar em produção
+
+Isto autentica jogadores e guarda hash de senha; um erro aqui não é cosmético. O
+código foi revisado várias vezes em busca de exploits (autenticação sem senha,
+tomada de conta, injeção via config, corrida entre threads), mas revisão própria
+tem limite e nem sempre fica 100%
+
+**Se você tem experiência em segurança ou em plugins Bukkit/Bungee/Velocity, agradeço uma revisão no código.** 
+Onde olhar primeiro: o fluxo de pré-login em
+`AuthManager.checkPreLogin`/`setUpSession`, o injetor de login premium standalone em
+`bukkit/.../premium/` (mexe com pipeline Netty), e o isolamento do driver SQLite em
+`DriverDataSource`.
+
+Encontrou alguma vulnerabilidade? Abra uma [issue](../../issues) descrevendo o
+cenário e, se puder como reproduzir. Para algo mais sério que prefira não deixar
+público até ter correção e etc... Me mande mensagem no meu Discord: newvituuz
 
 ---
 
@@ -42,7 +62,7 @@ redis:
   channel: "vlogin" # prefixo dos canais e chaves
 ```
 
-Ligue nos proxies; nos backends é opcional (serve para propagar logout e kick).
+Ligue nos proxies. Nos backends é opcional (serve para propagar logout e kick).
 
 O que roda por cima disso:
 
@@ -437,9 +457,8 @@ opção está desligada.
 Nada disso aparece no config: o que está lá funciona. Listado para deixar o escopo
 explícito:
 
-- 2FA por e-mail ou Discord.
-- Integração com a API do Floodgate. Contas Bedrock são reconhecidas pelo padrão de
-  UUID do Floodgate e pela coluna `bedrock-uuid`, sem chamar o plugin.
+- 2FA por e-mail ou Discord. As colunas `email` e `discord` no schema existem só
+  para preservar esses dados numa migração; nada os lê ou usa depois.
 - `username-appender` (prefixo/sufixo por tipo de conta).
 - Redirecionamento para o último servidor conectado (`post-login` funciona).
 - Diálogos nativos da 1.21.6+.
