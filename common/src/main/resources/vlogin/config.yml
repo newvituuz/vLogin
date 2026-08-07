@@ -472,13 +472,6 @@ commands:
   on-login: []
   #- "@console @proxy send @player lobby"
 
-  # Remove do log do console a senha digitada em /logar, /registrar e /trocarsenha.
-  #
-  # O servidor grava a linha do comando ANTES de qualquer plugin poder cancelar,
-  # então sem isso a senha vai parar no console e no arquivo de log. Comandos sem
-  # argumento continuam aparecendo, para o histórico de quem tentou entrar.
-  redact-passwords-in-log: true
-
   # Comandos liberados antes de autenticar, além dos próprios comandos de login.
   allowed-before-login: []
   #- "/suporte"

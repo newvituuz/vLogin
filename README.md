@@ -336,8 +336,7 @@ Decisões que parecem detalhe mas seguram ataques reais:
 - **Senha digitada não vai para o log.** O servidor escreve
   `Fulano issued server command: /logar hunter2` no console e no arquivo de log
   *antes* de qualquer plugin poder cancelar, então a única saída é filtrar o próprio
-  logger, e é o que `commands.redact-passwords-in-log` faz. Um `/logar` sem argumento
-  continua aparecendo, para o histórico de quem tentou entrar.
+  logger. Um `/logar` sem argumento continua aparecendo, para o histórico de quem tentou entrar.
 - **Falha do banco não vira conta nova.** Se a consulta falha no login, a conexão é
   recusada em vez de tratada como conta inexistente; e o registro reconfere no banco
   logo antes de gravar. Sem isso, uma instabilidade momentânea deixaria alguém

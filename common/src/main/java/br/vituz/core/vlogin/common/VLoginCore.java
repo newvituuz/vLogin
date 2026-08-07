@@ -182,17 +182,15 @@ public final class VLoginCore {
         register(new OfflineCommand(this));
         register(new VLoginCommand(this));
 
-        if (settings.redactPasswordsInLog) {
-            List<String> sensitive = new ArrayList<>();
-            sensitive.addAll(login.aliases());
-            sensitive.addAll(register.aliases());
-            sensitive.addAll(changePassword.aliases());
-            sensitive.add("vlogin create");
-            sensitive.add("vlogin setpass");
-            sensitive.add("vl create");
-            sensitive.add("vl setpass");
-            ConsoleLogGuard.install(sensitive, logger);
-        }
+        List<String> sensitive = new ArrayList<>();
+        sensitive.addAll(login.aliases());
+        sensitive.addAll(register.aliases());
+        sensitive.addAll(changePassword.aliases());
+        sensitive.add("vlogin create");
+        sensitive.add("vlogin setpass");
+        sensitive.add("vl create");
+        sensitive.add("vl setpass");
+        ConsoleLogGuard.install(sensitive, logger);
     }
 
     private void register(br.vituz.core.vlogin.common.command.Command command) {

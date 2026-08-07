@@ -162,7 +162,6 @@ public final class Settings {
     public final List<String> onRegister;
     public final List<String> onLogin;
     public final List<String> allowedBeforeLogin;
-    public final boolean redactPasswordsInLog;
 
     public enum PremiumMode {
         OFF, VERIFY, EXCLUSIVE
@@ -356,7 +355,6 @@ public final class Settings {
         this.onRegister = config.getStringList("commands.on-register");
         this.onLogin = config.getStringList("commands.on-login");
         this.allowedBeforeLogin = lowercase(config.getStringList("commands.allowed-before-login"));
-        this.redactPasswordsInLog = config.getBoolean("commands.redact-passwords-in-log", true);
     }
 
     public boolean isBackendBehindProxy() {
