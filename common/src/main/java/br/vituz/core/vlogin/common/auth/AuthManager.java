@@ -305,7 +305,6 @@ public final class AuthManager {
         if (isUnrestricted(name)) {
             return;
         }
-
         PendingLogin prepared = pending.remove(key(name));
         if (prepared != null) {
             setUpSession(player, prepared.account, prepared.premiumVerified, prepared.mojangResult);
@@ -357,9 +356,19 @@ public final class AuthManager {
         sessions.put(key(player.name()), session);
         core.bus().markOnline(player.name(), session.address());
 
-        if (isVerified && mojangUuid != null && account != null && account.mojangId() == null) {
-            account.mojangId(mojangUuid);
-            saveAsync(account);
+        // Se a conta já tinha um mojangId, o UUID da sessão precisa bater. Se não
+        // bater, alguém trocou o nickname na Mojang para o de outra pessoa. Nesse
+        // caso o auto-login premium não pode acontecer.
+        if (isVerified && mojangUuid != null && account != null) {
+            if (account.mojangId() == null) {
+                account.mojangId(mojangUuid);
+                saveAsync(account);
+            } else if (!account.mojangId().equals(mojangUuid)) {
+                core.logger().warning("UUID mismatch para '" + player.name() + "': sessão="
+                        + mojangUuid + ", gravado=" + account.mojangId()
+                        + ". Possível troca de nickname na Mojang. Auto-login premium bloqueado.");
+                session.premiumVerified(false);
+            }
         }
 
         AuthReason autoLogin = resolveAutoLogin(session);
@@ -421,9 +430,17 @@ public final class AuthManager {
         // Só a conexão prova ser original. O UUID que chega junto com ela não serve:
         // quem conecta escolhe o que manda, e conferir contra o UUID guardado apenas
         // compara a alegação com ela mesma.
+        //
+        // Quando a conta já tem mojangId gravado, o UUID da sessão DEVE bater. Sem
+        // isso, trocar o nickname da conta Mojang para o de outra pessoa daria acesso
+        // à conta dela — o cenário clássico de nickname swap via NameMC.
         boolean provenPremium = premiumConnection;
         if (settings.premiumAutoLogin && provenPremium
                 && (registered || settings.premiumSkipPassword)) {
+            if (account != null && account.mojangId() != null
+                    && !account.mojangId().equals(player.uniqueId())) {
+                return null;
+            }
             session.premiumAutologin(true);
             return AuthReason.PREMIUM;
         }
@@ -764,7 +781,7 @@ public final class AuthManager {
             }
 
             session.account(account);
-            player.sendMessage(core.messages().get(MessageKey.REGISTERED));
+            // Quem avisa é o authenticate abaixo, pela AuthReason.REGISTRATION.
             runCommands(core.settings().onRegister, player);
             authenticate(session, AuthReason.REGISTRATION);
         }
@@ -1161,8 +1178,7 @@ public final class AuthManager {
                         "seconds", remaining));
             }
 
-            long elapsedSeconds = (now - session.joinedAt()) / 1000L;
-            if (elapsedSeconds > 0 && elapsedSeconds % REQUEST_REMINDER_SECONDS == 0) {
+            if (session.shouldRemind(now, TimeUnit.SECONDS.toMillis(REQUEST_REMINDER_SECONDS))) {
                 player.sendMessage(core.messages().get(session.isRegistered()
                         ? MessageKey.LOGIN_REQUEST : MessageKey.REGISTER_REQUEST));
             }

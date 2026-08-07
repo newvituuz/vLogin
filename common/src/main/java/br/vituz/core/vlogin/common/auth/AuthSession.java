@@ -18,6 +18,7 @@ public final class AuthSession {
     private volatile boolean premiumAutologin;
     private volatile boolean premiumVerified;
     private volatile long lastCommandAt;
+    private volatile long lastReminderAt;
 
     public AuthSession(AuthPlayer player, Account account) {
         this.player = player;
@@ -93,6 +94,19 @@ public final class AuthSession {
 
     public int recordFailure() {
         return failedAttempts.incrementAndGet();
+    }
+
+    /**
+     * Se já passou o intervalo desde o último lembrete. Contar pelo relógio
+     * repetia a mensagem quando dois ticks caíam no mesmo segundo.
+     */
+    public synchronized boolean shouldRemind(long now, long intervalMillis) {
+        long since = lastReminderAt == 0 ? now - joinedAt : now - lastReminderAt;
+        if (since < intervalMillis) {
+            return false;
+        }
+        lastReminderAt = now;
+        return true;
     }
 
     public synchronized boolean tryCommand(long cooldownMillis) {
