@@ -188,6 +188,23 @@ public final class AuthManager {
                 }
                 if (mojangResult.isPremium()) {
                     isPremiumName = true;
+
+                    // A identidade de uma conta original é o UUID da Mojang, não o
+                    // nickname: quem troca de nome continua sendo a mesma pessoa, e
+                    // quem compra um nome largado não herda a conta de quem o usava.
+                    if (mojangResult.uniqueId != null) {
+                        try {
+                            Account byMojang = core.storage()
+                                    .findByMojangId(mojangResult.uniqueId).orElse(null);
+                            if (byMojang != null) {
+                                byMojang.lastName(name);
+                                account = byMojang;
+                            }
+                        } catch (StorageException ex) {
+                            core.logger().log(Level.WARNING,
+                                    "Falha ao buscar conta pelo mojangId de " + name, ex);
+                        }
+                    }
                 }
             }
         }
@@ -241,7 +258,19 @@ public final class AuthManager {
             if (account != null && account.isRegistered()) {
                 return false;
             }
-            return core.mojang().lookup(name).isPremium();
+            MojangService.Result result = core.mojang().lookup(name);
+            if (!result.isPremium()) {
+                return false;
+            }
+            // Troca de nick: não achou pelo nome, mas a Mojang confirmou.
+            // Se já existe conta com esse mojangId, é o dono legítimo com nick novo.
+            if (account == null && result.uniqueId != null) {
+                Account byMojang = core.storage().findByMojangId(result.uniqueId).orElse(null);
+                if (byMojang != null) {
+                    return true;
+                }
+            }
+            return true;
         } catch (StorageException ex) {
             core.logger().log(Level.WARNING, "Não deu para checar a conta de " + name
                     + " antes do login; seguindo pelo caminho da senha.", ex);
@@ -351,24 +380,28 @@ public final class AuthManager {
                 || core.platform().enforcesOnlineMode()
                 || core.platform().isMojangVerified(player);
 
+        // Nickname bate mas o UUID não: a conta guardada é de outra pessoa, que
+        // trocou de nome na Mojang e largou este. Quem chegou agora é o dono atual
+        // do nickname, então entra, mas numa conta própria e vazia. A antiga solta
+        // o nickname e continua encontrável pelo mojangId, que é a identidade real.
+        if (isVerified && account != null && account.mojangId() != null
+                && !account.mojangId().equals(player.uniqueId())) {
+            releaseName(account, player);
+            account = null;
+            // O mojangUuid acima veio da conta que acabou de sair de cena. Deixá-lo
+            // gravaria o UUID do antigo dono na conta nova, e a busca por identidade
+            // passaria a devolver a pessoa errada.
+            mojangUuid = player.uniqueId();
+        }
+
         AuthSession session = new AuthSession(player, account);
         session.premiumVerified(isVerified);
         sessions.put(key(player.name()), session);
         core.bus().markOnline(player.name(), session.address());
 
-        // Se a conta já tinha um mojangId, o UUID da sessão precisa bater. Se não
-        // bater, alguém trocou o nickname na Mojang para o de outra pessoa. Nesse
-        // caso o auto-login premium não pode acontecer.
-        if (isVerified && mojangUuid != null && account != null) {
-            if (account.mojangId() == null) {
-                account.mojangId(mojangUuid);
-                saveAsync(account);
-            } else if (!account.mojangId().equals(mojangUuid)) {
-                core.logger().warning("UUID mismatch para '" + player.name() + "': sessão="
-                        + mojangUuid + ", gravado=" + account.mojangId()
-                        + ". Possível troca de nickname na Mojang. Auto-login premium bloqueado.");
-                session.premiumVerified(false);
-            }
+        if (isVerified && mojangUuid != null && account != null && account.mojangId() == null) {
+            account.mojangId(mojangUuid);
+            saveAsync(account);
         }
 
         AuthReason autoLogin = resolveAutoLogin(session);
@@ -388,6 +421,19 @@ public final class AuthManager {
     private void createPasswordlessAccount(AuthSession session, AuthReason reason, UUID mojangUuid) {
         AuthPlayer player = session.player();
         core.platform().scheduler().async(() -> {
+            // Antes de criar, procura pelo UUID: quem trocou de nickname na Mojang é a
+            // mesma pessoa, e criar de novo daria duas contas com a mesma identidade.
+            if (reason == AuthReason.PREMIUM) {
+                UUID identity = mojangUuid != null ? mojangUuid : player.uniqueId();
+                Account existing = findByMojangIdQuietly(identity);
+                if (existing != null) {
+                    existing.lastName(player.name());
+                    session.account(existing);
+                    authenticate(session, reason);
+                    return;
+                }
+            }
+
             Account account = Account.create(player.name(), player.uniqueId(), session.address());
             if (reason == AuthReason.PREMIUM) {
                 account.mojangId(mojangUuid != null ? mojangUuid : player.uniqueId());
@@ -405,6 +451,36 @@ public final class AuthManager {
             session.account(account);
             authenticate(session, reason);
         });
+    }
+
+    private Account findByMojangIdQuietly(UUID mojangId) {
+        if (mojangId == null) {
+            return null;
+        }
+        try {
+            return core.storage().findByMojangId(mojangId).orElse(null);
+        } catch (StorageException ex) {
+            core.logger().log(Level.WARNING, "Falha ao procurar a conta de " + mojangId, ex);
+            return null;
+        }
+    }
+
+    /**
+     * Tira o nickname de uma conta cujo dono já o trocou na Mojang.
+     *
+     * A conta não é apagada nem perde nada: só deixa de responder por um nome que
+     * não é mais dela. Quando o dono voltar, a busca pelo mojangId acha a conta e
+     * grava o nickname novo.
+     */
+    private void releaseName(Account account, AuthPlayer newcomer) {
+        String previous = account.lastName();
+        String freed = previous + "." + account.mojangId().toString().substring(0, 8);
+        account.lastName(freed);
+        core.logger().warning("O nickname '" + previous + "' agora pertence a "
+                + newcomer.uniqueId() + " na Mojang. A conta de " + account.mojangId()
+                + " passou a se chamar '" + freed + "' e mantém tudo o que tinha;"
+                + " ela volta ao nome novo assim que o dono entrar.");
+        saveAsync(account);
     }
 
     private AuthReason resolveAutoLogin(AuthSession session) {
@@ -439,6 +515,11 @@ public final class AuthManager {
                 && (registered || settings.premiumSkipPassword)) {
             if (account != null && account.mojangId() != null
                     && !account.mojangId().equals(player.uniqueId())) {
+                return null;
+            }
+            // Conta registrada aqui e sem vínculo é de quem criou a senha, não de quem
+            // hoje tem o nickname na Mojang. Vincular exige entrar e usar /original.
+            if (account != null && account.mojangId() == null && account.isRegistered()) {
                 return null;
             }
             session.premiumAutologin(true);
