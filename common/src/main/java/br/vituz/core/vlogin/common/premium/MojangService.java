@@ -32,6 +32,7 @@ public final class MojangService {
     private static final long CACHE_TTL = TimeUnit.MINUTES.toMillis(30);
     private static final long OUTAGE_BACKOFF = TimeUnit.MINUTES.toMillis(2);
     private static final int MAX_CACHE_ENTRIES = 10_000;
+    private static final int MAX_RESPONSE_CHARS = 8192;
 
     private final Logger logger;
     private final Map<String, CacheEntry> cache = new ConcurrentHashMap<>();
@@ -127,12 +128,16 @@ public final class MojangService {
                 return new Result(Status.UNKNOWN, null);
             }
 
+            // Leitura com teto: a resposta esperada tem algumas centenas de bytes, e
+            // um endpoint sequestrado ou um portal cativo poderia devolver um corpo
+            // sem fim e consumir a memória do servidor.
             StringBuilder body = new StringBuilder();
             try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    body.append(line);
+                char[] chunk = new char[1024];
+                int read;
+                while (body.length() < MAX_RESPONSE_CHARS && (read = reader.read(chunk)) != -1) {
+                    body.append(chunk, 0, read);
                 }
             }
 

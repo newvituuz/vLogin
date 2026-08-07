@@ -229,6 +229,26 @@ public final class VLoginCore {
         }
     }
 
+    /**
+     * Deixa o arquivo legível só para o dono, onde o sistema souber fazer isso.
+     *
+     * Este é o segredo que assina as decisões entre proxy e backend; num host
+     * compartilhado, a permissão padrão o entrega a qualquer outra conta da máquina.
+     */
+    private void restrictToOwner(File file) {
+        try {
+            java.nio.file.Path path = file.toPath();
+            if (path.getFileSystem().supportedFileAttributeViews().contains("posix")) {
+                java.nio.file.Files.setPosixFilePermissions(path,
+                        java.util.EnumSet.of(java.nio.file.attribute.PosixFilePermission.OWNER_READ,
+                                java.nio.file.attribute.PosixFilePermission.OWNER_WRITE));
+            }
+        } catch (IOException | RuntimeException ex) {
+            logger.log(Level.FINE, "Não deu para restringir a permissão do secret.key: "
+                    + ex.getMessage());
+        }
+    }
+
     private String loadSecret() {
         File file = new File(platform.dataFolder(), "secret.key");
         try {
@@ -242,6 +262,7 @@ public final class VLoginCore {
             new SecureRandom().nextBytes(random);
             String secret = Base64.getEncoder().encodeToString(random);
             Files.write(file.toPath(), secret.getBytes(StandardCharsets.UTF_8));
+            restrictToOwner(file);
             logger.info("secret.key gerado. Copie este arquivo para todos os servidores com vLogin.");
             return secret;
         } catch (IOException ex) {

@@ -10,7 +10,8 @@ import java.util.Optional;
 
 public final class OfflineCommand extends PlayerCommand {
     public OfflineCommand(VLoginCore core) {
-        super(core, "offline", "Marca a conta como offline.", "offline", "pirata", "cracked");
+        super(core, "offline", "Marca a conta como offline.", "vlogin.command.offline",
+                "offline", "pirata", "cracked");
     }
 
     @Override

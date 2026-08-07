@@ -6,7 +6,7 @@ import br.vituz.core.vlogin.common.platform.AuthPlayer;
 
 public final class LoginCommand extends PlayerCommand {
     public LoginCommand(VLoginCore core) {
-        super(core, "login", "Autentica no servidor.", "logar", "login", "log");
+        super(core, "login", "Autentica no servidor.", null, "logar", "login", "log");
     }
 
     @Override

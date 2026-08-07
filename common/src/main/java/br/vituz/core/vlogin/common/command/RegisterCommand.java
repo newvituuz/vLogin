@@ -6,7 +6,7 @@ import br.vituz.core.vlogin.common.platform.AuthPlayer;
 
 public final class RegisterCommand extends PlayerCommand {
     public RegisterCommand(VLoginCore core) {
-        super(core, "register", "Cria o registro da conta.", "registrar", "register", "reg");
+        super(core, "register", "Cria o registro da conta.", null, "registrar", "register", "reg");
     }
 
     @Override

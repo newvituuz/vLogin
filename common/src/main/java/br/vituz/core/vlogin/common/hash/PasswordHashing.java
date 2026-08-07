@@ -35,6 +35,7 @@ public final class PasswordHashing {
     private static final int MAX_ARGON2_ITERATIONS = 64;
     private static final int MAX_ARGON2_PARALLELISM = 16;
     private static final int MAX_PBKDF2_ITERATIONS = 5_000_000;
+    private static final int MAX_BCRYPT_COST = 18;
 
     private final Settings settings;
 
@@ -84,6 +85,9 @@ public final class PasswordHashing {
 
         try {
             if (algorithm.isBcrypt()) {
+                if (bcryptCostOf(encoded) > MAX_BCRYPT_COST) {
+                    return false;
+                }
                 return OpenBSDBCrypt.checkPassword(encoded, password.toCharArray());
             }
             if (algorithm.isArgon2()) {
@@ -103,6 +107,20 @@ public final class PasswordHashing {
             }
         } catch (RuntimeException ex) {
             return false;
+        }
+    }
+
+    /** O custo escrito no hash, como em $2a$10$. -1 quando não dá para ler. */
+    private static int bcryptCostOf(String encoded) {
+        int start = encoded.indexOf('$', 1) + 1;
+        int end = start > 0 ? encoded.indexOf('$', start) : -1;
+        if (start <= 0 || end <= start) {
+            return -1;
+        }
+        try {
+            return Integer.parseInt(encoded.substring(start, end));
+        } catch (NumberFormatException ex) {
+            return -1;
         }
     }
 

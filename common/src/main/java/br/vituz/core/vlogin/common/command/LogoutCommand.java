@@ -11,7 +11,7 @@ public final class LogoutCommand extends PlayerCommand {
     private static final long COOLDOWN_MILLIS = 1000L;
 
     public LogoutCommand(VLoginCore core) {
-        super(core, "logout", "Encerra a sessao atual.", "deslogar", "logout", "sair");
+        super(core, "logout", "Encerra a sessao atual.", null, "deslogar", "logout", "sair");
     }
 
     @Override

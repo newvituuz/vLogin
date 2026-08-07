@@ -12,7 +12,8 @@ public final class PremiumCommand extends PlayerCommand {
     private static final long COOLDOWN_MILLIS = 3000L;
 
     public PremiumCommand(VLoginCore core) {
-        super(core, "premium", "Marca a conta como original.", "original", "premium");
+        super(core, "premium", "Marca a conta como original.", "vlogin.command.premium",
+                "original", "premium");
     }
 
     @Override

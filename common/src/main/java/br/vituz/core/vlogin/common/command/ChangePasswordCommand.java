@@ -6,7 +6,7 @@ import br.vituz.core.vlogin.common.platform.AuthPlayer;
 
 public final class ChangePasswordCommand extends PlayerCommand {
     public ChangePasswordCommand(VLoginCore core) {
-        super(core, "changepassword", "Altera a propria senha.", "trocarsenha", "mudarsenha", "changepassword");
+        super(core, "changepassword", "Altera a propria senha.", null, "trocarsenha", "mudarsenha", "changepassword");
     }
 
     @Override
