@@ -38,6 +38,9 @@ public final class AuthManager {
     private final Map<String, PendingLogin> pending = new ConcurrentHashMap<>();
 
     private static final long PENDING_TTL_MILLIS = 60_000L;
+    private static final int PRESENCE_REFRESH_TICKS = 60;
+
+    private int presenceTicks;
 
     private static final class PendingLogin {
         final Account account;
@@ -902,6 +905,13 @@ public final class AuthManager {
             player.sendMessage(core.messages().get(MessageKey.NOT_AUTHENTICATED));
             return;
         }
+        // Aqui se confere uma senha, então vale o mesmo freio do /logar: sem ele, uma
+        // sessão sequestrada adivinha a senha atual à vontade, e cada tentativa ainda
+        // custa um hash inteiro de CPU.
+        if (!session.tryCommand(COMMAND_COOLDOWN_MILLIS)) {
+            player.sendMessage(core.messages().get(MessageKey.COOLDOWN));
+            return;
+        }
         String rejection = validatePassword(player.name(), replacement);
         if (rejection != null) {
             player.sendMessage(rejection);
@@ -911,6 +921,7 @@ public final class AuthManager {
         core.platform().scheduler().async(() -> {
             Account account = session.account();
             if (account == null || !core.hashing().verify(current, account.password())) {
+                core.bruteForce().recordFailure(session.address());
                 player.sendMessage(core.messages().get(MessageKey.WRONG_CURRENT));
                 return;
             }
@@ -1098,9 +1109,16 @@ public final class AuthManager {
             return;
         }
         core.platform().scheduler().async(() -> {
-            if (core.mojang().lookup(session.player().name()).isPremium()) {
+            MojangService.Result result = core.mojang().lookup(session.player().name());
+            if (result.status == MojangService.Status.UNKNOWN) {
+                return;
+            }
+            if (result.isPremium()) {
                 session.player().sendMessage(core.messages().get(MessageKey.PREMIUM_QUESTION));
             }
+            // Sem marcar, a pergunta e a consulta à Mojang se repetiam a cada entrada.
+            account.settings().setBoolean(AccountSettings.PREMIUM_QUESTION_ANSWERED, true);
+            saveAsync(account);
         });
     }
 
@@ -1274,6 +1292,18 @@ public final class AuthManager {
 
         core.bruteForce().purgeExpired();
         pending.entrySet().removeIf(entry -> now - entry.getValue().createdAt > PENDING_TTL_MILLIS);
+
+        // A presença no Redis expira sozinha, e ninguém a renovava: depois do prazo o
+        // jogador sumia da vista dos outros nós e a checagem de "já está online"
+        // parava de enxergá-lo. Uma vez por minuto basta, e é bem menos que o TTL.
+        if (core.bus().isShared() && ++presenceTicks >= PRESENCE_REFRESH_TICKS) {
+            presenceTicks = 0;
+            for (AuthSession session : sessions.values()) {
+                if (session.player().isOnline()) {
+                    core.bus().markOnline(session.player().name(), session.address());
+                }
+            }
+        }
     }
 
     public void saveAsync(Account account) {
@@ -1293,6 +1323,11 @@ public final class AuthManager {
 
     /** Janela em que o pedido de vínculo vale. Vencido, a conta volta ao normal. */
     private static final long PREMIUM_CLAIM_TTL_MILLIS = TimeUnit.MINUTES.toMillis(10);
+
+    /** Conta uma senha errada digitada fora do /logar, como no /offline. */
+    public void recordPasswordFailure(String address) {
+        core.bruteForce().recordFailure(address);
+    }
 
     public void requestPremiumClaim(Account account) {
         account.settings().setLong(AccountSettings.PREMIUM_CLAIM_AT, System.currentTimeMillis());

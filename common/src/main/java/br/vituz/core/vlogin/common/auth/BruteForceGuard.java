@@ -14,11 +14,21 @@ import java.util.concurrent.TimeUnit;
  * entre chutes na conta alheia. Limpar um endereço é ação administrativa.
  */
 public final class BruteForceGuard {
-    private final Settings settings;
+    private volatile Settings settings;
     private final Map<String, Attempts> failures = new ConcurrentHashMap<>();
     private final Map<String, Long> blocked = new ConcurrentHashMap<>();
 
     public BruteForceGuard(Settings settings) {
+        this.settings = settings;
+    }
+
+    /**
+     * Passa a valer a configuração nova depois de um reload.
+     *
+     * Trocar a referência em vez de recriar o guarda preserva os contadores e os
+     * bloqueios: recriar deixaria um /vlogin reload zerar quem estava sob ataque.
+     */
+    public void settings(Settings settings) {
         this.settings = settings;
     }
 

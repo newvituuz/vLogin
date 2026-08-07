@@ -9,6 +9,8 @@ import br.vituz.core.vlogin.common.platform.AuthPlayer;
 import java.util.Optional;
 
 public final class OfflineCommand extends PlayerCommand {
+    private static final long COOLDOWN_MILLIS = 1000L;
+
     public OfflineCommand(VLoginCore core) {
         super(core, "offline", "Marca a conta como offline.", "vlogin.command.offline",
                 "offline", "pirata", "cracked");
@@ -37,7 +39,14 @@ public final class OfflineCommand extends PlayerCommand {
         // Estar logado não prova que é o dono: numa sessão retomada, ou com a senha
         // vazada, quem está aqui pode ser outro. Desvincular derruba a entrada
         // automática do dono de vez, então vale pedir a senha de novo.
+        if (!session.get().tryCommand(COOLDOWN_MILLIS)) {
+            player.sendMessage(core.messages().get(MessageKey.COOLDOWN));
+            return;
+        }
         if (args.length == 0 || !core.hashing().verify(args[0], account.password())) {
+            if (args.length > 0) {
+                core.auth().recordPasswordFailure(session.get().address());
+            }
             player.sendMessage(core.messages().get(MessageKey.OFFLINE_NEEDS_PASSWORD));
             return;
         }

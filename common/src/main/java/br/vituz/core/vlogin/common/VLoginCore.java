@@ -121,6 +121,9 @@ public final class VLoginCore {
     public void reload() throws IOException {
         loadConfiguration();
         this.hashing = new PasswordHashing(settings);
+        if (bruteForceGuard != null) {
+            bruteForceGuard.settings(settings);
+        }
         logger.info("Configuração recarregada.");
     }
 
@@ -174,18 +177,21 @@ public final class VLoginCore {
         RegisterCommand register = new RegisterCommand(this);
         ChangePasswordCommand changePassword = new ChangePasswordCommand(this);
 
+        OfflineCommand offline = new OfflineCommand(this);
+
         register(login);
         register(register);
         register(changePassword);
         register(new LogoutCommand(this));
         register(new PremiumCommand(this));
-        register(new OfflineCommand(this));
+        register(offline);
         register(new VLoginCommand(this));
 
         List<String> sensitive = new ArrayList<>();
         sensitive.addAll(login.aliases());
         sensitive.addAll(register.aliases());
         sensitive.addAll(changePassword.aliases());
+        sensitive.addAll(offline.aliases());
         sensitive.add("vlogin create");
         sensitive.add("vlogin setpass");
         sensitive.add("vl create");

@@ -51,8 +51,21 @@ public final class VelocityPlatform implements Platform {
         return server;
     }
 
+    /**
+     * Só quando o proxy inteiro está em online mode.
+     *
+     * Dizer "sim" fixo aqui marcava TODA conexão como comprovada na Mojang, inclusive
+     * a de quem nunca passou por autenticação nenhuma. Poder exigir a comprovação de
+     * uma conexão (o que o proxy realmente sabe fazer) é outra pergunta, respondida
+     * em canVerifyMojang.
+     */
     @Override
     public boolean enforcesOnlineMode() {
+        return server.getConfiguration().isOnlineMode();
+    }
+
+    @Override
+    public boolean canVerifyMojang() {
         return true;
     }
 
