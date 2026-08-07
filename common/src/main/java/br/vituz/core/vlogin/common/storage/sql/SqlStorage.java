@@ -202,7 +202,11 @@ public final class SqlStorage implements Storage {
         }
         createUniqueUsernameIndex(handle);
         createIndex(handle, table + "_uuid_idx", colUuid);
-        createIndex(handle, table + "_premium_idx", colPremiumUuid);
+        // Único: o UUID da Mojang é a identidade de uma conta original, e duas linhas
+        // com o mesmo valor tornam a busca por identidade ambígua. Colunas nulas não
+        // colidem entre si nem no SQLite nem no MySQL, então contas offline convivem.
+        createUniqueIndex(handle, table + "_premium_idx", colPremiumUuid);
+        createUniqueIndex(handle, table + "_bedrock_idx", colBedrockUuid);
         createIndex(handle, table + "_address_idx", colAddress);
     }
 
@@ -227,6 +231,24 @@ public final class SqlStorage implements Storage {
             // nicknames repetidos. Só o segundo caso merece atenção.
             logger.log(Level.FINE, "Índice único de nickname não criado: " + ex.getMessage());
             createIndex(handle, table + "_username_lookup_idx", colUsername);
+        }
+    }
+
+    /**
+     * Índice único, caindo para um comum quando a tabela já tem repetidos.
+     *
+     * Numa base herdada pode existir mais de uma conta com o mesmo UUID, e recusar a
+     * subir por isso deixaria o servidor sem login. O aviso diz o que limpar.
+     */
+    private void createUniqueIndex(Connection handle, String name, String column) {
+        String sql = dialect == SqlDialect.SQLITE
+                ? "CREATE UNIQUE INDEX IF NOT EXISTS `" + name + "` ON `" + table + "` (`" + column + "`)"
+                : "CREATE UNIQUE INDEX `" + name + "` ON `" + table + "` (`" + column + "`)";
+        try (Statement statement = handle.createStatement()) {
+            statement.executeUpdate(sql);
+        } catch (SQLException ex) {
+            logger.log(Level.FINE, "Índice único " + name + " não criado: " + ex.getMessage());
+            createIndex(handle, name + "_lookup", column);
         }
     }
 

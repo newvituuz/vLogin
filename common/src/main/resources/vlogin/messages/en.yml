@@ -46,6 +46,7 @@ password:
 # link with Mojang
 account:
   premium-enabled: "&aAccount linked to Mojang. Rejoin for it to take effect."
+  premium-claim-opened: "&aRequest noted. &7Rejoin within the next 10 minutes:\n&7the server will ask you to prove the Mojang account.\n&7If you do not, nothing changes and your password still works."
   premium-disabled: "&aAccount unlinked from Mojang. Back to using the password."
   offline-needs-password: "&cUnlinking your Mojang account removes your automatic sign-in.\n&7Confirm with your password&7: &b/offline <password>"
   premium-not-found: "&cMojang has no account under this nickname."

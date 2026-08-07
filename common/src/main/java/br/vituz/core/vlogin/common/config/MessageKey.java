@@ -12,6 +12,10 @@ public enum MessageKey {
     REGISTER_SUBTITLE("auth.register-subtitle", "&7digite &f/registrar <senha> <senha>"),
     REGISTERED("auth.registered", "&aPronto! Sua senha foi criada."),
     ALREADY_REGISTERED("auth.already-registered", "&cVocê já tem uma senha criada."),
+    PREMIUM_CLAIM_OPENED("account.premium-claim-opened",
+            "&aPedido registrado. &7Entre de novo nos próximos 10 minutos:\n"
+            + "&7o servidor vai pedir que você comprove a conta na Mojang.\n"
+            + "&7Se não comprovar, nada muda e a sua senha continua valendo."),
     OFFLINE_NEEDS_PASSWORD("account.offline-needs-password",
             "&cDesvincular a conta da Mojang tira a sua entrada automática.\n"
             + "&7Confirme com a sua senha&7: &b/offline <senha>"),

@@ -34,6 +34,7 @@ auth:
 
 # vínculo com a Mojang
 account:
+  premium-claim-opened: "&aPedido registrado. &7Entre de novo nos próximos 10 minutos:\n&7o servidor vai pedir que você comprove a conta na Mojang.\n&7Se não comprovar, nada muda e a sua senha continua valendo."
   offline-needs-password: "&cDesvincular a conta da Mojang tira a sua entrada automática.\n&7Confirme com a sua senha&7: &b/offline <senha>"
   premium-enabled: "&aConta ligada à Mojang. Entre de novo para valer."
   premium-disabled: "&aConta desligada da Mojang. Volte a usar a senha."

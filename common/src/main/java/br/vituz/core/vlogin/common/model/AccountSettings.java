@@ -96,6 +96,15 @@ public final class AccountSettings {
 
     public static final String PREMIUM_QUESTION_ANSWERED = "premium-asked";
 
+    /**
+     * Momento em que a conta pediu para ser ligada a uma conta da Mojang.
+     *
+     * É um pedido, não um vínculo: quem pediu ainda precisa comprovar a conta na
+     * entrada seguinte. Guardar o UUID direto deixaria qualquer um reivindicar a
+     * identidade de outra pessoa só por ter registrado o nickname aqui primeiro.
+     */
+    public static final String PREMIUM_CLAIM_AT = "premium-claim";
+
     public static final String SESSION_STARTED = "session";
 
     public static final String SESSION_ADDRESS = "session-ip";

@@ -175,7 +175,7 @@ public final class AuthManager {
 
         if (account != null && account.isPremium()) {
             isPremiumName = true;
-        } else if (account == null || !account.isRegistered()) {
+        } else if (account == null || !account.isRegistered() || hasOpenPremiumClaim(account)) {
             boolean verifies = !core.bedrock().looksBedrock(name)
                     && (settings.premiumMode == Settings.PremiumMode.VERIFY
                     || settings.premiumMode == Settings.PremiumMode.EXCLUSIVE);
@@ -399,8 +399,15 @@ public final class AuthManager {
         sessions.put(key(player.name()), session);
         core.bus().markOnline(player.name(), session.address());
 
-        if (isVerified && mojangUuid != null && account != null && account.mojangId() == null) {
-            account.mojangId(mojangUuid);
+        // Vincula só o que não tem dono declarado aqui. Uma conta com senha pertence a
+        // quem a registrou, e gravar nela o UUID de quem chega com o mesmo nickname
+        // faria a conexão seguinte entrar direto: o bloqueio do login automático não
+        // adiantaria nada se o vínculo fosse criado assim mesmo. Quem tem senha e é
+        // dono da conta original usa /original para pedir o vínculo.
+        if (isVerified && account != null && account.mojangId() == null
+                && (!account.isRegistered() || hasOpenPremiumClaim(account))) {
+            account.mojangId(player.uniqueId());
+            account.settings().setLong(AccountSettings.PREMIUM_CLAIM_AT, 0L);
             saveAsync(account);
         }
 
@@ -1282,5 +1289,28 @@ public final class AuthManager {
     public void setPremium(Account account, UUID mojangId) {
         account.mojangId(mojangId);
         saveAsync(account);
+    }
+
+    /** Janela em que o pedido de vínculo vale. Vencido, a conta volta ao normal. */
+    private static final long PREMIUM_CLAIM_TTL_MILLIS = TimeUnit.MINUTES.toMillis(10);
+
+    public void requestPremiumClaim(Account account) {
+        account.settings().setLong(AccountSettings.PREMIUM_CLAIM_AT, System.currentTimeMillis());
+        saveAsync(account);
+    }
+
+    /**
+     * Se a conta pediu o vínculo há pouco e ainda não comprovou.
+     *
+     * Enquanto o pedido vale, a entrada dessa conta passa a exigir a comprovação na
+     * Mojang. Quem pediu sem ser o dono não consegue entrar durante a janela, e
+     * depois dela a conta volta a aceitar a senha normalmente.
+     */
+    private boolean hasOpenPremiumClaim(Account account) {
+        if (account == null) {
+            return false;
+        }
+        long claimedAt = account.settings().getLong(AccountSettings.PREMIUM_CLAIM_AT, 0L);
+        return claimedAt > 0 && System.currentTimeMillis() - claimedAt < PREMIUM_CLAIM_TTL_MILLIS;
     }
 }

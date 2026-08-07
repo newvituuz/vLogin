@@ -38,16 +38,18 @@ public final class PremiumCommand extends PlayerCommand {
             return;
         }
 
+        // Existir uma conta na Mojang com este nickname não prova que ela é de quem
+        // está digitando. Aqui a conta só fica marcada como candidata; o vínculo é
+        // gravado na entrada seguinte, quando a conexão comprovar a conta.
         core.platform().scheduler().async(() -> {
             MojangService.Result result = core.mojang().lookup(player.name());
             if (!result.isPremium()) {
                 player.sendMessage(core.messages().get(MessageKey.PREMIUM_NOT_FOUND));
                 return;
             }
-            core.auth().setPremium(account, result.uniqueId);
-            player.sendMessage(core.messages().get(MessageKey.PREMIUM_ENABLED));
+            core.auth().requestPremiumClaim(account);
             core.platform().scheduler().player(player, () ->
-                    player.kick(core.messages().plain(MessageKey.PREMIUM_ENABLED)));
+                    player.kick(core.messages().plain(MessageKey.PREMIUM_CLAIM_OPENED)));
         });
     }
 }
